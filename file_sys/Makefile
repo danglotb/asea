@@ -2,6 +2,7 @@
 
 ROOTDIR=/home/enseign/ASE
 #ROOTDIR=.
+BINDIR=./bin
 
 CC	=  gcc
 CFLAGS	=  -Wall -Werror -ansi -pedantic
@@ -36,7 +37,7 @@ dfile: dfile.o $(OBJECTS)
 cfile: cfile.o $(OBJECTS)
 ddir: ddir.o $(OBJECTS)
 % : %.o
-	$(CC) -o $@ $^ -L$(LIBDIR) $(LIBS)
+	$(CC) -o $(BINDIR)/$@ $^ -L$(LIBDIR) $(LIBS)
 
 ###------------------------------
 ### #include dependences 
@@ -61,10 +62,11 @@ dir.o: dir.c
 ###------------------------------
 ### Misc.
 ###------------------------------------------------------------
-.PHONY: clean realclean depend
+.PHONY: clean realclean depend 
 clean:
 	$(RM) *.o $(BINARIES)
 realclean: clean 
+	$(RM) $(BINDIR)/*	
 depend : 
 	$(CC) $(CFLAGS) -MM $(INCDIR) *.c 
 
