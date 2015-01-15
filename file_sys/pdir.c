@@ -5,7 +5,7 @@ int main(int argc, char** argv) {
 	int inumber;
 
 	if(argc != 2) {
-		printf("./%s <absolute_path>\n", argv[0]);
+		printf("%s <absolute_path>\n", argv[0]);
 		return EXIT_FAILURE;
 	}
 

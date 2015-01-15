@@ -64,7 +64,7 @@ open_ifile(file_desc_t *fd, unsigned int inumber)
     struct inode_s inode; 
     /* we are opening the designed file! */
     fd->fds_inumber = inumber;
-    read_inode (inumber, &inode);    
+    read_inode (inumber, &inode);
     
     /* other trivial init */
     fd->fds_size = inode.ind_size;
@@ -74,9 +74,9 @@ open_ifile(file_desc_t *fd, unsigned int inumber)
        with this first bloc otherwise */
     first_bloc = vbloc_of_fbloc(inumber, 0, FALSE);
     if (! first_bloc) 
-	memset(fd->fds_buf, 0, DATA_BLOC_SIZE);
+	   memset(fd->fds_buf, 0, DATA_BLOC_SIZE);
     else
-	read_bloc(current_vol, first_bloc, fd->fds_buf);
+	   read_bloc(current_vol, first_bloc, fd->fds_buf);
 
     /* last trivial */
     fd->fds_dirty = FALSE;

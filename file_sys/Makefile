@@ -1,7 +1,7 @@
-# $Id: Makefile,v 1.2 2009/11/17 10:02:37 marquet Exp $
-##############################################################################
+
 
 ROOTDIR=/home/enseign/ASE
+#ROOTDIR=.
 
 CC	=  gcc
 CFLAGS	=  -Wall -Werror -ansi -pedantic
@@ -15,7 +15,7 @@ LIBS    = -lhardware
 ###------------------------------
 ### Main targets 
 ###------------------------------------------------------------
-BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile	
+BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile ddir
 OBJECTS	= $(addsuffix .o,\
 	  tools ifile mount mbr bloc_allocator inode drive dir)
 
@@ -34,6 +34,7 @@ nfile: nfile.o $(OBJECTS)
 pfile: pfile.o $(OBJECTS)
 dfile: dfile.o $(OBJECTS)
 cfile: cfile.o $(OBJECTS)
+ddir: ddir.o $(OBJECTS)
 % : %.o
 	$(CC) -o $@ $^ -L$(LIBDIR) $(LIBS)
 
