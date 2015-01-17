@@ -1,11 +1,13 @@
 
+#change ROOTDIR uncomment / comment
+
 
 ROOTDIR=/home/enseign/ASE
 #ROOTDIR=.
 BINDIR=./bin
 
 CC	=  gcc
-CFLAGS	=  -Wall -Werror -ansi -pedantic
+CFLAGS	=  -Wall -Werror -ansi -pedantic -m32
 CFLAGS  += -std=iso9899:1999
 CFLAGS  += -g
 LIBDIR  =  $(ROOTDIR)/lib
@@ -16,7 +18,7 @@ LIBS    = -lhardware
 ###------------------------------
 ### Main targets 
 ###------------------------------------------------------------
-BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile ddir
+BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile ddir prompt
 OBJECTS	= $(addsuffix .o,\
 	  tools ifile mount mbr bloc_allocator inode drive dir)
 
@@ -36,6 +38,7 @@ pfile: pfile.o $(OBJECTS)
 dfile: dfile.o $(OBJECTS)
 cfile: cfile.o $(OBJECTS)
 ddir: ddir.o $(OBJECTS)
+prompt: prompt.o $(OBJECTS)
 % : %.o
 	$(CC) -o $(BINDIR)/$@ $^ -L$(LIBDIR) $(LIBS)
 
