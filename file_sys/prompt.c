@@ -44,9 +44,9 @@ static void execute(const char *name) {
 
 static void loop(void) {
     char name[64];
-
-    while (printf("> "), scanf("%62s", name) == 1)
-	     execute(name) ;
+    while (printf("> "), scanf("%s", name) == 1){
+       execute(name) ;
+    }
 }
 
 /* commands */
@@ -106,7 +106,7 @@ main(int argc, char **argv)
 
     mount();
 
-    current_directory = ".";
+    current_directory = "/";
 
     /* dialog with user */ 
     loop();
