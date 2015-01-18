@@ -38,7 +38,7 @@ static void execute(const char *name) {
     struct _cmd *c = commands; 
   
     while (c->name && strcmp (name, c->name))
-	c++;
+    c++;
     (*c->fun)(c);
 }
 
@@ -49,12 +49,43 @@ static void loop(void) {
     }
 }
 
+
+
+/*
+static void execute(char *name) {
+    struct _cmd *c = commands; 
+    const char* delimiter = " ";
+    char *args = strtok(name, delimiter);
+    while(args != NULL){
+        printf("%s\n", args);
+        args = strtok(NULL, delimiter);
+    }
+    while (c->name && strcmp (name, c->name))
+	c++;
+    (*c->fun)(c);
+}
+
+static void loop(void) {
+    char name[64];
+    while (1){
+        printf("> ");
+        scanf("%s[^\n]", name);
+        execute(name);
+    }
+}
+*/
+
 /* commands */
 
 /* change directory */
 
 static void cd(struct _cmd *c) {
-    
+   /* unsigned int inumber;
+    inumber = inumber_of_path(c->name);
+    printf("%s\n", c->name);
+    printf("%d\n", inumber);*/
+
+
 }
 
 /* list command actually only work on current directory */
