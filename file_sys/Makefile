@@ -68,8 +68,10 @@ dir.o: dir.c
 .PHONY: clean realclean depend 
 clean:
 	$(RM) *.o $(BINARIES)
-realclean: clean 
-	$(RM) $(BINDIR)/*	
+clean_disk:
+	$(RM) *.bin
+realclean: clean clean_disk
+	$(RM) $(BINDIR)/* *~	
 depend : 
 	$(CC) $(CFLAGS) -MM $(INCDIR) *.c 
 

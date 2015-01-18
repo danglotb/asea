@@ -15,12 +15,17 @@ struct _cmd {
 
 char * current_directory;
 
+
 static void ls(struct _cmd *c);
+static void cd(struct _cmd *c);
+static void help(struct _cmd *c);
+static void do_exit(struct _cmd *c);
+static void none(struct _cmd *c);
 
 static struct _cmd commands [] = {
     {"ls", ls, 	"affiche le contenu d'un repertoire"},
     {"cd", cd,  "change de repertoire courrant"},
-    {"exit", exit,	"exit the prompt"},
+    {"exit", do_exit,	"exit the prompt"},
     {"help", help,	"display this help"},
     {0, none, 		"unknown command, try help"}
 } ;
@@ -44,13 +49,19 @@ static void loop(void) {
 	     execute(name) ;
 }
 
+/* commands */
+
+/* change directory */
+
 static void cd(struct _cmd *c) {
     
 }
 
+/* list command actually only work on current directory */
+
 static void ls(struct _cmd *c) {
     unsigned int inumber;
-     if((inumber = inumber_of_path(current_directory) != 0) {
+     if((inumber = inumber_of_path(current_directory) != 0)) {
         file_desc_t fd;
         if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
             struct entry_s entry;
@@ -66,16 +77,28 @@ static void ls(struct _cmd *c) {
          PRINT_FATAL_ERROR("Not a valid path");
 }
 
-static void none(struct _cmd *c) {
-    printf ("%s\n", c->comment) ;
+/* print help */
+
+static void help(struct _cmd *dummy) {
+    struct _cmd *c = commands;
+    for (; c->name; c++) 
+    printf ("%s\t-- %s\n", c->name, c->comment);
 }
 
+/* exit command */
 
-static void exit() {
+static void do_exit(struct _cmd *c) {
     umount();
     exit(EXIT_SUCCESS);
 }
 
+/* if unmatched command */
+
+static void none(struct _cmd *c) {
+    printf ("%s\n", c->comment) ;
+}
+
+/* main */
 
 int
 main(int argc, char **argv)
@@ -88,7 +111,7 @@ main(int argc, char **argv)
     /* dialog with user */ 
     loop();
 
-    exit();
+    do_exit(NULL);
 
     /* make gcc -W happy */
     exit(EXIT_SUCCESS);
