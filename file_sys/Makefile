@@ -2,13 +2,13 @@
 #change ROOTDIR uncomment / comment
 
 
-ROOTDIR=/home/enseign/ASE
-#ROOTDIR=.
+#ROOTDIR=/home/enseign/ASE
+ROOTDIR=.
 BINDIR=./bin
 
 CC	=  gcc
-CFLAGS	=  -Wall -Werror -ansi -pedantic -m32
-CFLAGS  += -std=iso9899:1999
+CFLAGS	=  -Wall -ansi -pedantic -m32
+CFLAGS  += -Werror -std=iso9899:1999
 CFLAGS  += -g
 LIBDIR  =  $(ROOTDIR)/lib
 INCDIR  =  $(ROOTDIR)/include
@@ -40,7 +40,7 @@ cfile: cfile.o $(OBJECTS)
 ddir: ddir.o $(OBJECTS)
 prompt: prompt.o $(OBJECTS)
 % : %.o
-	$(CC) -o $(BINDIR)/$@ $^ -L$(LIBDIR) $(LIBS)
+	$(CC) $(CFLAGS) -o $(BINDIR)/$@ $^ -L$(LIBDIR) $(LIBS)
 
 ###------------------------------
 ### #include dependences 
