@@ -102,19 +102,33 @@ static void loop(void) {
 
 /* commands */
 
+
+/* check if it is a valid path 
+    update the inumber with  the new inumbre_directory */
+
+static int check(char *path, unsigned int *inumber) {
+    file_desc_t fd;
+    if(open_ifile(&fd, *inumber) != RETURN_FAILURE) {
+            *inumber = find_entry(&fd, path);
+            PRINT_ASSERT_ERROR_MSG(*inumber > -1, "Wrong path");
+            close_ifile(&fd);
+    } else
+         PRINT_FATAL_ERROR("Not a valid path");
+}
+
 /* change directory */
 
 static void cd(unsigned int argc, char * argv[]) {
     unsigned int cursor = 0, partial_cursor = 0;
     unsigned int parent_inumber = current_super_bloc.sb_inode_root;
     char path[MAX_PATH];
-    PRINT_ASSERT_ERROR_MSG(arg =< 0, "Bad argument for cd");
+    PRINT_ASSERT_ERROR_MSG(argc <= 0, "Bad argument for cd");
     while (argv[1][cursor] != '\0') {
         if (argv[1][cursor] == '/') {
             check(path, &parent_inumber);
             /* reinit for the next checking */
-            cursor++
-            memset(path, 0, partial_cursor+1)
+            cursor++;
+            memset(path, 0, partial_cursor+1);
             partial_cursor = 0;
         }
         path[partial_cursor++] = argv[1][cursor++];
@@ -122,19 +136,6 @@ static void cd(unsigned int argc, char * argv[]) {
     current_directory = path;   
 }
 
-
-/* check if it is a valid path 
-    update the inumber with  the new inumbre_directory */
-
-static int check(char *path, unsigned int *inumber) {
-    file_desc_t fd;
-    if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
-            *inumber = find_entry(&fd, path);
-            PRINT_ASSERT_ERROR_MSG(*inumber > -1, "Wrong path");
-            close_ifile(&fd);
-    } else
-         PRINT_FATAL_ERROR("Not a valid path");
-}
 
 /* list command actually only work on current directory */
 
