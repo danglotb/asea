@@ -20,6 +20,7 @@ char *current_directory;
 
 static void ls(unsigned int argc, char *argv[]);
 static void cd(unsigned int argc, char *argv[]);
+static void mkdir(unsigned int argc, char *argv[]);
 static void help(unsigned int argc, char *argv[]);
 static void do_exit(unsigned int argc, char *argv[]);
 static void none(unsigned int argc, char *argv[]);
@@ -27,6 +28,7 @@ static void none(unsigned int argc, char *argv[]);
 static struct _cmd commands [] = {
     {"ls", ls, 	"affiche le contenu d'un repertoire"},
     {"cd", cd,  "change de repertoire courrant"},
+    {"mkdir", mkdir, "cree un nouveau repertoire"},
     {"exit", do_exit,	"exit the prompt"},
     {"help", help,	"display this help"},
     {0, none, 		"unknown command, try help"}
@@ -35,23 +37,6 @@ static struct _cmd commands [] = {
 /* ------------------------------
    dialog and execute 
    ------------------------------------------------------------*/
-/*
-static void execute(const char *name) {
-    struct _cmd *c = commands; 
-  
-    while (c->name && strcmp (name, c->name))
-    c++;
-    (*c->fun)(c);
-}
-
-static void loop(void) {
-    char name[64];
-    while (printf("> "), scanf("%s", name) == 1){
-       execute(name) ;
-    }
-}
-*/
-
 
 static void execute(unsigned int argc, char *argv[]) {
     struct _cmd *c = commands; 
@@ -69,7 +54,7 @@ static void loop(void) {
     argv[0] = (char *)malloc(sizeof(char *)*10);
     while (1){
         memset(name, 0, sizeof(char)*64);
-        printf("> ");
+        printf("%s> ", current_directory);
         fflush(stdout);
         error = read(STDIN_FILENO, name, 64);
         if(error == -1)
@@ -78,7 +63,7 @@ static void loop(void) {
         i = 0;
         argc = 0;
         cpt = 0;
-        while(name[i] != '\0'){
+        while(name[i] != '\n'){
             /*printf("name[%d] : %c\n", i, name[i]);*/
             if(name[i] == ' '){
                 argv[argc] = (char *)malloc(sizeof(char *)*i-cpt);
@@ -95,66 +80,90 @@ static void loop(void) {
         strncpy(argv[argc], name+cpt, i-cpt);
         /*printf("argc : %d\n", argc);
         printf("argv : %s\n", argv[argc]);*/
-        argc++;
        execute(argc, argv);
     }
 }
 
 /* commands */
 
-
-/* check if it is a valid path 
-    update the inumber with  the new inumbre_directory */
-
-static int check(char *path, unsigned int *inumber) {
-    file_desc_t fd;
-    if(open_ifile(&fd, *inumber) != RETURN_FAILURE) {
-            *inumber = find_entry(&fd, path);
-            PRINT_ASSERT_ERROR_MSG(*inumber > -1, "Wrong path");
-            close_ifile(&fd);
-    } else
-         PRINT_FATAL_ERROR("Not a valid path");
-}
-
 /* change directory */
 
 static void cd(unsigned int argc, char * argv[]) {
-    unsigned int cursor = 0, partial_cursor = 0;
-    unsigned int parent_inumber = current_super_bloc.sb_inode_root;
-    char path[MAX_PATH];
-    PRINT_ASSERT_ERROR_MSG(argc <= 0, "Bad argument for cd");
-    while (argv[1][cursor] != '\0') {
-        if (argv[1][cursor] == '/') {
-            check(path, &parent_inumber);
-            /* reinit for the next checking */
-            cursor++;
-            memset(path, 0, partial_cursor+1);
-            partial_cursor = 0;
+    if (argc == 0)
+        current_directory = "/";
+    else {
+        if (inumber_of_path(argv[0]) == 0) {
+           printf("Not a valid path\n");
+           return;
         }
-        path[partial_cursor++] = argv[1][cursor++];
+        current_directory = argv[0];
     }
-    current_directory = path;   
 }
-
 
 /* list command actually only work on current directory */
 
 static void ls(unsigned int argc, char *argv[]) {
     unsigned int inumber;
-     if((inumber = inumber_of_path(current_directory) != 0)) {
+    if((inumber = inumber_of_path(current_directory) != 0)) {
         file_desc_t fd;
         if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
             struct entry_s entry;
-
             while(read_ifile(&fd, &entry, sizeof(struct entry_s)) > 0) {
                 if(entry.inumber != 0)
                     printf("%s\n", entry.name);
             }
             close_ifile(&fd);
         }
+    } else
+         PRINT_FATAL_ERROR("Not a valid path");
+}
+
+/* create a directory */
+
+static void mkdir(unsigned int argc, char *argv[]) {
+
+    int path_cursor;
+    char* name;
+
+    if(argc < 1) {
+        printf("./%s <directory_name>\n", argv[0]);
+        return;
+    }
+
+    path_cursor = strlen(argv[0])-1;
+
+    while(path_cursor >= 0 && argv[0][path_cursor] != '/') {
+        path_cursor--;
+    }
+
+
+    if(path_cursor >= 0 && argv[0][path_cursor+1] != '\0') {
+        unsigned int inumber;
+        char min_name[2];
+
+        name = argv[0]+path_cursor+1;
+
+        if(path_cursor == 0) {
+            min_name[0] = '/';
+            min_name[1] = '\0';
+            argv[0] = min_name;
+        }
+        else {
+            argv[0][path_cursor] = '\0';
+        }
+        
+        if((inumber = inumber_of_path(argv[0])) == 0) {
+            PRINT_FATAL_ERROR("Not a valid path");
+        }
+
+        if(add_entry(inumber, name, FILE_DIRECTORY) == -1) {
+            PRINT_FATAL_ERROR("Unable to create directory");
+        }
+        
     }
     else
-         PRINT_FATAL_ERROR("Not a valid path");
+        PRINT_FATAL_ERROR("Not a valid path");
+
 }
 
 /* print help */
@@ -162,7 +171,7 @@ static void ls(unsigned int argc, char *argv[]) {
 static void help(unsigned int argc, char *argv[]) {
     struct _cmd *c = commands;
     for (; c->name; c++) 
-    printf ("%s\t-- %s\n", c->name, c->comment);
+      printf ("%s\t-- %s\n", c->name, c->comment);
 }
 
 /* exit command */
