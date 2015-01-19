@@ -144,7 +144,7 @@ unsigned int inumber_of_basename(unsigned int idir, const char* basename) {
     ret = find_entry(&fd, basename);
 
     if(ret < 0) {
-        return -1;
+        return 0;
     }
 
     seek2_ifile(&fd, ret*sizeof(struct entry_s));

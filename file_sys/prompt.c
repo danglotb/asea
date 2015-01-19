@@ -29,29 +29,12 @@ static struct _cmd commands [] = {
     {"cd", cd,  "change de repertoire courrant"},
     {"exit", do_exit,	"exit the prompt"},
     {"help", help,	"display this help"},
-    {0, none, 		"unknown command, try help"}
+    {0, none,       "unknown command, try help"}
 } ;
 
 /* ------------------------------
    dialog and execute 
    ------------------------------------------------------------*/
-/*
-static void execute(const char *name) {
-    struct _cmd *c = commands; 
-  
-    while (c->name && strcmp (name, c->name))
-    c++;
-    (*c->fun)(c);
-}
-
-static void loop(void) {
-    char name[64];
-    while (printf("> "), scanf("%s", name) == 1){
-       execute(name) ;
-    }
-}
-*/
-
 
 static void execute(unsigned int argc, char *argv[]) {
     struct _cmd *c = commands; 
@@ -61,24 +44,24 @@ static void execute(unsigned int argc, char *argv[]) {
 }
 
 static void loop(void) {
-    char name[64];
+    char name[MAX_PATH];
     int error;
     unsigned int i, cpt;
     unsigned int argc;
-    char *argv[64];
+    char *argv[MAX_PATH];
     argv[0] = (char *)malloc(sizeof(char *)*10);
     while (1){
-        memset(name, 0, sizeof(char)*64);
+        memset(name, 0, sizeof(char)*MAX_PATH);
         printf("> ");
         fflush(stdout);
-        error = read(STDIN_FILENO, name, 64);
+        error = read(STDIN_FILENO, name, MAX_PATH);
         if(error == -1)
             printf("YA UN PBLM %d \n", error);
         fflush(stdin);
         i = 0;
         argc = 0;
         cpt = 0;
-        while(name[i] != '\0'){
+        while(name[i] != '\n'){
             /*printf("name[%d] : %c\n", i, name[i]);*/
             if(name[i] == ' '){
                 argv[argc] = (char *)malloc(sizeof(char *)*i-cpt);
@@ -95,7 +78,6 @@ static void loop(void) {
         strncpy(argv[argc], name+cpt, i-cpt);
         /*printf("argc : %d\n", argc);
         printf("argv : %s\n", argv[argc]);*/
-        argc++;
        execute(argc, argv);
     }
 }
@@ -122,7 +104,7 @@ static void cd(unsigned int argc, char * argv[]) {
     unsigned int cursor = 0, partial_cursor = 0;
     unsigned int parent_inumber = current_super_bloc.sb_inode_root;
     char path[MAX_PATH];
-    PRINT_ASSERT_ERROR_MSG(argc <= 0, "Bad argument for cd");
+    PRINT_ASSERT_ERROR_MSG(argc > 0, "Bad argument for cd");
     while (argv[1][cursor] != '\0') {
         if (argv[1][cursor] == '/') {
             check(path, &parent_inumber);
@@ -141,7 +123,23 @@ static void cd(unsigned int argc, char * argv[]) {
 
 static void ls(unsigned int argc, char *argv[]) {
     unsigned int inumber;
-     if((inumber = inumber_of_path(current_directory) != 0)) {
+  /*  char *pathname;
+    if(argv[0] != NULL){
+        pathname = (char *)malloc(sizeof(char)*strlen(argv[0]));
+        strcpy()
+    }*/
+    char pathname[MAX_PATH];
+    if(strlen(current_directory) > MAX_PATH)
+        exit(EXIT_FAILURE);
+
+    strcpy(pathname, current_directory);
+    if(argc > 0){     
+        strcat(pathname, argv[0]);
+    }
+    printf("pathname : %s\n", pathname);
+
+     if((inumber = inumber_of_path(pathname) != 0)) {
+        printf("inumber : %d\n", inumber);
         file_desc_t fd;
         if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
             struct entry_s entry;
@@ -154,7 +152,7 @@ static void ls(unsigned int argc, char *argv[]) {
         }
     }
     else
-         PRINT_FATAL_ERROR("Not a valid path");
+         printf("Not a valid path\n");
 }
 
 /* print help */
