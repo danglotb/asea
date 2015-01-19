@@ -192,11 +192,9 @@ unsigned int inumber_of_path(const char* pathname){
             name[str_cursor-begin_cursor] = '\0';
 
             current_inumber = inumber_of_basename(current_inumber, name);
-
             if(current_inumber == 0) {
                 return 0;
             }
-            
             free(name);
 
             begin_cursor = str_cursor+1;
