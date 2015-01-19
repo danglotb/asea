@@ -3,24 +3,25 @@
 #include <errno.h>
 #include "dir.h"
 #include "mount.h"
+#include <unistd.h>
 
 /* ------------------------------
    command list
    ------------------------------------------------------------*/
 struct _cmd {
     char *name;
-    void (*fun) (struct _cmd *c);
+    void (*fun) (unsigned int argc, char *argv[]);
     char *comment;
 };
 
 char * current_directory;
 
 
-static void ls(struct _cmd *c);
-static void cd(struct _cmd *c);
-static void help(struct _cmd *c);
-static void do_exit(struct _cmd *c);
-static void none(struct _cmd *c);
+static void ls(unsigned int argc, char *argv[]);
+static void cd(unsigned int argc, char *argv[]);
+static void help(unsigned int argc, char *argv[]);
+static void do_exit(unsigned int argc, char *argv[]);
+static void none(unsigned int argc, char *argv[]);
 
 static struct _cmd commands [] = {
     {"ls", ls, 	"affiche le contenu d'un repertoire"},
@@ -33,7 +34,7 @@ static struct _cmd commands [] = {
 /* ------------------------------
    dialog and execute 
    ------------------------------------------------------------*/
-
+/*
 static void execute(const char *name) {
     struct _cmd *c = commands; 
   
@@ -48,38 +49,62 @@ static void loop(void) {
        execute(name) ;
     }
 }
+*/
 
 
 
-/*
-static void execute(char *name) {
+static void execute(unsigned int argc, char *argv[]) {
     struct _cmd *c = commands; 
-    const char* delimiter = " ";
-    char *args = strtok(name, delimiter);
-    while(args != NULL){
-        printf("%s\n", args);
-        args = strtok(NULL, delimiter);
-    }
-    while (c->name && strcmp (name, c->name))
-	c++;
-    (*c->fun)(c);
+    while (c->name && strcmp (argv[0], c->name))
+        c++;
+    (*c->fun)(argc, argv+1);
 }
 
 static void loop(void) {
     char name[64];
+    int error;
+    unsigned int i, cpt;
+    unsigned int argc;
+    char *argv[64];
+    argv[0] = (char *)malloc(sizeof(char *)*10);
     while (1){
+        memset(name, 0, sizeof(char)*64);
         printf("> ");
-        scanf("%s[^\n]", name);
-        execute(name);
+        fflush(stdout);
+        error = read(STDIN_FILENO, name, 64);
+        if(error == -1)
+            printf("YA UN PBLM %d \n", error);
+        fflush(stdin);
+        i = 0;
+        argc = 0;
+        cpt = 0;
+        while(name[i] != '\0'){
+            /*printf("name[%d] : %c\n", i, name[i]);*/
+            if(name[i] == ' '){
+                argv[argc] = (char *)malloc(sizeof(char *)*i-cpt);
+                strncpy(argv[argc], name+cpt, i-cpt);
+                /*printf("argc : %d\n", argc);
+                printf("argv : %s\n", argv[argc]);*/
+                argc++;
+                cpt = i+1;
+
+            }
+            i++;
+        }
+        argv[argc] = (char *)malloc(sizeof(char *)*i-cpt);
+        strncpy(argv[argc], name+cpt, i-cpt);
+        /*printf("argc : %d\n", argc);
+        printf("argv : %s\n", argv[argc]);*/
+        argc++;
+       execute(argc, argv);
     }
 }
-*/
 
 /* commands */
 
 /* change directory */
 
-static void cd(struct _cmd *c) {
+static void cd(unsigned int argc, char *argv[]) {
    /* unsigned int inumber;
     inumber = inumber_of_path(c->name);
     printf("%s\n", c->name);
@@ -90,7 +115,7 @@ static void cd(struct _cmd *c) {
 
 /* list command actually only work on current directory */
 
-static void ls(struct _cmd *c) {
+static void ls(unsigned int argc, char *argv[]) {
     unsigned int inumber;
      if((inumber = inumber_of_path(current_directory) != 0)) {
         file_desc_t fd;
@@ -110,7 +135,7 @@ static void ls(struct _cmd *c) {
 
 /* print help */
 
-static void help(struct _cmd *dummy) {
+static void help(unsigned int argc, char *argv[]) {
     struct _cmd *c = commands;
     for (; c->name; c++) 
     printf ("%s\t-- %s\n", c->name, c->comment);
@@ -118,14 +143,15 @@ static void help(struct _cmd *dummy) {
 
 /* exit command */
 
-static void do_exit(struct _cmd *c) {
+static void do_exit(unsigned int argc, char *argv[]) {
     umount();
     exit(EXIT_SUCCESS);
 }
 
 /* if unmatched command */
 
-static void none(struct _cmd *c) {
+static void none(unsigned int argc, char *argv[]) {
+    struct _cmd *c = commands;
     printf ("%s\n", c->comment) ;
 }
 
@@ -142,7 +168,7 @@ main(int argc, char **argv)
     /* dialog with user */ 
     loop();
 
-    do_exit(NULL);
+    do_exit(0, NULL);
 
     /* make gcc -W happy */
     exit(EXIT_SUCCESS);
