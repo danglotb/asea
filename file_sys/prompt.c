@@ -4,6 +4,8 @@
 #include "dir.h"
 #include "mount.h"
 
+#define MAX_PATH 64
+
 /* ------------------------------
    command list
    ------------------------------------------------------------*/
@@ -13,8 +15,7 @@ struct _cmd {
     char *comment;
 };
 
-char * current_directory;
-
+char *current_directory;
 
 static void ls(struct _cmd *c);
 static void cd(struct _cmd *c);
@@ -33,7 +34,7 @@ static struct _cmd commands [] = {
 /* ------------------------------
    dialog and execute 
    ------------------------------------------------------------*/
-
+/*
 static void execute(const char *name) {
     struct _cmd *c = commands; 
   
@@ -48,10 +49,10 @@ static void loop(void) {
        execute(name) ;
     }
 }
+*/
 
 
 
-/*
 static void execute(char *name) {
     struct _cmd *c = commands; 
     const char* delimiter = " ";
@@ -73,19 +74,40 @@ static void loop(void) {
         execute(name);
     }
 }
-*/
 
 /* commands */
 
 /* change directory */
 
-static void cd(struct _cmd *c) {
-   /* unsigned int inumber;
-    inumber = inumber_of_path(c->name);
-    printf("%s\n", c->name);
-    printf("%d\n", inumber);*/
+static void cd(unsigned int argc, char * argv[]) {
+    unsigned int cursor = 0, partial_cursor = 0;
+    unsigned int parent_inumber = current_super_bloc.sb_inode_root;
+    char path[MAX_PATH];
+    PRINT_ASSERT_ERROR_MSG(arg =< 0, "Bad argument for cd");
+    while (argv[1][cursor] != '\0') {
+        if (argv[1][cursor] == '/') {
+            check(path, &parent_inumber);
+            /* reinit for the next checking */
+            cursor++
+            memset(path, 0, partial_cursor+1)
+            partial_cursor = 0;
+        }
+        path[partial_cursor++] = argv[1][cursor++];
+    }
+    current_directory = path;   
+}
 
+/* check if it is a valid path 
+    update the inumber with  the new inumbre_directory */
 
+static int check(char *path, unsigned int *inumber) {
+    file_desc_t fd;
+    if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
+            *inumber = find_entry(&fd, path);
+            PRINT_ASSERT_ERROR_MSG(*inumber > -1, "Wrong path");
+            close_ifile(&fd);
+    } else
+         PRINT_FATAL_ERROR("Not a valid path");
 }
 
 /* list command actually only work on current directory */

@@ -9,8 +9,8 @@
 #include "utility.h"
 
 #define SECTOR_SIZE 512
-#define NB_CYLINDER 16
-#define NB_SECTOR 16
+#define NB_CYLINDER 1024
+#define NB_SECTOR 32
 
 
 /*
