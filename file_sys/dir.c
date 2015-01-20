@@ -174,13 +174,11 @@ unsigned int inumber_of_path(const char* pathname){
 
     if(pathname[1] == '\0')
         return current_inumber;
-
     
     do {
 
         if(pathname[str_cursor] == '/' || pathname[str_cursor] == '\0') {
             char* name;
-
             if(str_cursor == begin_cursor) {
                 return 0;
             }
@@ -201,7 +199,6 @@ unsigned int inumber_of_path(const char* pathname){
         }
 
     } while(pathname[str_cursor++] != '\0');
-
 
     return current_inumber;
 }

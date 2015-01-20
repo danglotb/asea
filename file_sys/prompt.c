@@ -16,7 +16,7 @@ struct _cmd {
     char *comment;
 };
 
-char *current_directory;
+static char *current_directory = "/";
 
 static void ls(unsigned int argc, char *argv[]);
 static void cd(unsigned int argc, char *argv[]);
@@ -54,11 +54,10 @@ static void loop(void) {
     argv[0] = (char *)malloc(sizeof(char *)*10);
     while (1){
         memset(name, 0, sizeof(char)*MAX_PATH);
-        printf("> ");
+        printf("%s> ", current_directory);
         fflush(stdout);
         error = read(STDIN_FILENO, name, MAX_PATH);
-        if(error == -1)
-            printf("YA UN PBLM %d \n", error);
+        PRINT_ASSERT_ERROR_MSG(error != -1, "error on read\n");
         fflush(stdin);
         i = 0;
         argc = 0;
@@ -117,10 +116,8 @@ static void ls(unsigned int argc, char *argv[]) {
     if(argc > 0){     
         strcat(pathname, argv[0]);
     }
-    printf("pathname : %s\n", pathname);
-
-     if((inumber = inumber_of_path(pathname) != 0)) {
-        printf("inumber : %d\n", inumber);
+    inumber = inumber_of_path(pathname);
+     if( inumber != 0) {
         file_desc_t fd;
         if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
             struct entry_s entry;
@@ -210,8 +207,6 @@ main(int argc, char **argv)
 {
 
     mount();
-
-    current_directory = "/";
 
     /* dialog with user */ 
     loop();
