@@ -16,7 +16,7 @@ struct _cmd {
     char *comment;
 };
 
-static char *current_directory = "/";
+static char *current_directory;
 
 static void ls(unsigned int argc, char *argv[]);
 static void cd(unsigned int argc, char *argv[]);
@@ -77,7 +77,7 @@ static void loop(void) {
         }
         argv[argc] = (char *)malloc(sizeof(char *)*i-cpt);
         strncpy(argv[argc], name+cpt, i-cpt);
-        /*printf("argc : %d\n", argc);
+/*      printf("argc : %d\n", argc);
         printf("argv : %s\n", argv[argc]);*/
        execute(argc, argv);
     }
@@ -88,14 +88,22 @@ static void loop(void) {
 /* change directory */
 
 static void cd(unsigned int argc, char * argv[]) {
+    char pathname[MAX_PATH];
     if (argc == 0)
-        current_directory = "/";
+        strcpy(current_directory, "/");
     else {
-        if (inumber_of_path(argv[0]) == 0) {
+         if (argv[0][0] != ('/')) {  
+            strcpy(pathname, current_directory);
+            if(argc > 0) {
+                strcat(pathname, argv[0]);
+            }
+        } else
+                strcpy(pathname, argv[0]);
+        if (inumber_of_path(pathname) == 0) {
            printf("Not a valid path\n");
            return;
         }
-        current_directory = argv[0];
+        strncpy(current_directory, pathname, MAX_PATH);
     }
 }
 
@@ -109,13 +117,21 @@ static void ls(unsigned int argc, char *argv[]) {
         strcpy()
     }*/
     char pathname[MAX_PATH];
-    if(strlen(current_directory) > MAX_PATH)
-        exit(EXIT_FAILURE);
-
-    strcpy(pathname, current_directory);
-    if(argc > 0){     
-        strcat(pathname, argv[0]);
+    if(strlen(current_directory) > MAX_PATH) {
+        printf("Actual path is too long\n");
+        return;
     }
+    if (argc == 0) {
+        strcpy(pathname, current_directory);
+    } else {
+        if (argv[0][0] != ('/')) {  
+            strcpy(pathname, current_directory);
+            if(argc > 0)
+                strcat(pathname, argv[0]);
+        } else
+                strcpy(pathname, argv[0]);
+    }
+
     inumber = inumber_of_path(pathname);
      if( inumber != 0) {
         file_desc_t fd;
@@ -127,8 +143,10 @@ static void ls(unsigned int argc, char *argv[]) {
             }
             close_ifile(&fd);
         }
-    } else
-         PRINT_FATAL_ERROR("Not a valid path");
+    } else {
+           printf("Not a valid path\n");
+           return;
+        }
 }
 
 /* create a directory */
@@ -207,6 +225,9 @@ main(int argc, char **argv)
 {
 
     mount();
+
+    current_directory = (char*)malloc(sizeof(char)*MAX_PATH);
+    strcpy(current_directory, "/");
 
     /* dialog with user */ 
     loop();
