@@ -91,9 +91,9 @@ static void loop(void) {
 
 static void cd(unsigned int argc, char * argv[]) {
     char pathname[MAX_PATH];
-    if (argc == 0 ) 
+    if (argc == 0) 
         strcpy(current_directory, "/");
-    else if(strcmp(argv[0], ".") == 0)
+    else if(argc == 1 && strcmp(argv[0], ".") == 0)
         return;
     else {
          if (argv[0][0] != ('/')) {  
