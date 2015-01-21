@@ -5,6 +5,8 @@
 #include "mount.h"
 #include <unistd.h>
 
+#include "../scheduler/manage_ctx.h"
+
 #define MAX_PATH 64
 
 /* ------------------------------
@@ -218,11 +220,13 @@ static void none(unsigned int argc, char *argv[]) {
     printf ("%s\n", c->comment) ;
 }
 
+void empty(void* rien) {
+
+}
+
 /* main */
 
-int
-main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 
     mount();
 
