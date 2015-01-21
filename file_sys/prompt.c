@@ -91,8 +91,10 @@ static void loop(void) {
 
 static void cd(unsigned int argc, char * argv[]) {
     char pathname[MAX_PATH];
-    if (argc == 0)
+    if (argc == 0 ) 
         strcpy(current_directory, "/");
+    else if(strcmp(argv[0], ".") == 0)
+        return;
     else {
          if (argv[0][0] != ('/')) {  
             strcpy(pathname, current_directory);
@@ -113,17 +115,14 @@ static void cd(unsigned int argc, char * argv[]) {
 
 static void ls(unsigned int argc, char *argv[]) {
     unsigned int inumber;
-  /*  char *pathname;
-    if(argv[0] != NULL){
-        pathname = (char *)malloc(sizeof(char)*strlen(argv[0]));
-        strcpy()
-    }*/
     char pathname[MAX_PATH];
+    printf("current_directory : %s\n", current_directory);
+
     if(strlen(current_directory) > MAX_PATH) {
         printf("Actual path is too long\n");
         return;
     }
-    if (argc == 0) {
+    if (argc == 0 || strcmp(argv[0], ".") == 0) {
         strcpy(pathname, current_directory);
     } else {
         if (argv[0][0] != ('/')) {  
