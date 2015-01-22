@@ -6,10 +6,6 @@
 ROOTDIR=.
 BINDIR=./bin
 
-CC	=  gcc
-CFLAGS	=  -Wall -ansi -pedantic -m32
-CFLAGS  += -Werror -std=iso9899:1999
-CFLAGS  += -g
 LIBDIR  =  $(ROOTDIR)/lib
 INCDIR  =  $(ROOTDIR)/include
 CFLAGS  += -I$(INCDIR)
@@ -21,6 +17,8 @@ LIBS    = -lhardware
 BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile ddir prompt
 OBJECTS	= $(addsuffix .o,\
 	  tools ifile mount mbr bloc_allocator inode drive dir)
+OBJECTS_SCHED_REL=$(addprefix ../,\
+	$(OBJECTS_SCHED))
 
 all: $(BINARIES) $(OBJECTS)
 
@@ -38,9 +36,11 @@ pfile: pfile.o $(OBJECTS)
 dfile: dfile.o $(OBJECTS)
 cfile: cfile.o $(OBJECTS)
 ddir: ddir.o $(OBJECTS)
-prompt: prompt.o $(OBJECTS)
+
 % : %.o
-	$(CC) $(CFLAGS) -o $(BINDIR)/$@ $^ -L$(LIBDIR) $(LIBS)
+	$(CC) $(CFLAGS) -o $(BINDIR)/$@  $^ -L$(LIBDIR) $(LIBS)
+prompt: prompt.o $(OBJECTS)
+	$(CC) $(CFLAGS) -o $(BINDIR)/$@  $(OBJECTS_SCHED_REL)  $^ -L$(LIBDIR) $(LIBS)
 
 ###------------------------------
 ### #include dependences 

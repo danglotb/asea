@@ -10,6 +10,9 @@ export CFLAGS  += -g
 export FILE_DIR= ./file_sys
 export SCHED_DIR= ./scheduler
 
+export OBJECTS_SCHED=$(addsuffix .o,\
+	 $(SCHED_DIR)/hw $(SCHED_DIR)/manage_ctx)
+
 all: file sched
 
 file: sched
