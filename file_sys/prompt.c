@@ -109,6 +109,23 @@ static void loop(void) {
     }
 }
 
+char * relative_to_absolute(char *pathname){
+    unsigned int i;
+    unsigned int length;
+    unsigned int indice;
+    char * path; = current_directory;
+    strcat(path, pathname);
+    char * dir_name;
+    length = strlen(path);
+    for(i = 0; i < length; i++){
+        if(path[i] == '/'){
+            strncpy(dir_name, path+indice; i - indice);
+            indice = i;
+        }
+
+    }
+}
+
 /* commands */
 
 /* change directory */
