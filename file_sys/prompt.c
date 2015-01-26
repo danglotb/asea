@@ -12,6 +12,7 @@
 #define STACK_SIZE 16384
 
 typedef void (fun_cmd_t) (unsigned int, char* []);
+typedef void (fun_loop_t) (void);
 
 /* ------------------------------
    command list
@@ -22,6 +23,10 @@ struct _cmd {
     char *comment;
 };
 
+struct proxy_loop {
+    fun_loop_t *fun;
+};
+
 struct proxy_cmd {
     fun_cmd_t *fun;
     unsigned int argc;
@@ -29,6 +34,7 @@ struct proxy_cmd {
 };
 
 static char *current_directory;
+struct proxy_loop *loop_call;
 
 static void ls(unsigned int argc, char *argv[]);
 static void cd(unsigned int argc, char *argv[]);
@@ -174,11 +180,12 @@ static void ls(unsigned int argc, char *argv[]) {
         } else
                 strcpy(pathname, argv[0]);
     }
-
     inumber = inumber_of_path(pathname);
      if( inumber != 0) {
+printf("inif\n");
         file_desc_t fd;
         if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
+printf("inif\n");
             struct entry_s entry;
             while(read_ifile(&fd, &entry, sizeof(struct entry_s)) > 0) {
                 if(entry.inumber != 0)
@@ -262,6 +269,7 @@ static void help(unsigned int argc, char *argv[]) {
 
 static void do_exit(unsigned int argc, char *argv[]) {
     umount();
+    free(loop_call);
     exit(EXIT_SUCCESS);
 }
 
@@ -280,6 +288,13 @@ static void proxy_cmd(void * proxy) {
     (proxy_call->fun)(proxy_call->argc, proxy_call->argv);
 }
 
+/* proxy function (void*) to loop function */
+
+static void proxy_loop(void * proxy) {
+    struct proxy_loop *proxy_call = (struct proxy_loop*)proxy;
+    (proxy_call->fun)();
+}
+
 /* main */
 
 int main(int argc, char **argv) {
@@ -289,7 +304,11 @@ int main(int argc, char **argv) {
     current_directory = (char*)malloc(sizeof(char)*MAX_PATH);
     strcpy(current_directory, "/");
 
-    loop();
+    loop_call = (struct proxy_loop*)malloc(sizeof(struct proxy_loop));
+    loop_call->fun = loop;
+
+    create_ctx(STACK_SIZE, proxy_loop, loop_call);
+    start_sched();
 
     do_exit(0, NULL);
 

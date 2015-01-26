@@ -24,7 +24,7 @@ static int irqs_are_enable = 1;
 static void
 do_timer_interrupt() {
     if (timer_irq_handler && irqs_are_enable)
-	timer_irq_handler();
+		timer_irq_handler();
 }
 
 void

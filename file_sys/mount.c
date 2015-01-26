@@ -14,13 +14,9 @@
 #include "hardware.h"
 #include "config.h"
 #include "tools.h"
-
-#ifdef SOL
-#   include "mbr+sol.h"
-#   include "super+sol.h"
-#else
-#   include "mbr.h"
-#endif
+#include "hardware_config.h"
+#include "mbr.h"
+#include "../scheduler/manage_ctx.h"
 
 /* load super bloc of the $CURRENT_VOLUME
    set current_volume accordingly */
@@ -66,6 +62,10 @@ emptyIT()
     return;
 }
 
+static void tamer() {
+  printf("TAMER\n");
+}
+
 /* ------------------------------
    Initialization and finalization fucntions
    ------------------------------------------------------------*/
@@ -75,14 +75,21 @@ mount()
     char *hw_config;
     int status, i; 
 
+
     /* Hardware initialization */
     hw_config = get_hw_config();
     status = init_hardware(hw_config);
     ffatal(status, "error in hardware initialization with %s\n", hw_config);
 
+    check_hda();
+
     /* Interrupt handlers */
-    for(i=0; i<16; i++)
-	IRQVECTOR[i] = emptyIT;
+    for(i=0; i<16; i++) {
+	     if (i != 2) 
+        IRQVECTOR[i] = emptyIT;
+    }
+
+    IRQVECTOR[HDA_IRQ] = tamer;
     
     /* Allows all IT */
     _mask(1);

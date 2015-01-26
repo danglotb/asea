@@ -61,11 +61,12 @@ int
 open_ifile(file_desc_t *fd, unsigned int inumber)
 {
     unsigned int first_bloc;
-    struct inode_s inode; 
+    struct inode_s inode;
+
+
     /* we are opening the designed file! */
     fd->fds_inumber = inumber;
     read_inode (inumber, &inode);
-    
     /* other trivial init */
     fd->fds_size = inode.ind_size;
     fd->fds_pos = 0;
@@ -80,7 +81,7 @@ open_ifile(file_desc_t *fd, unsigned int inumber)
 
     /* last trivial */
     fd->fds_dirty = FALSE;
-
+    
     return RETURN_SUCCESS;
 }
 
