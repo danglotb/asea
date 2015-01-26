@@ -4,10 +4,14 @@
 #include "dir.h"
 #include "mount.h"
 #include <unistd.h>
+#include <math.h>
 
 #include "../scheduler/manage_ctx.h"
 
 #define MAX_PATH 64
+#define STACK_SIZE 16384
+
+typedef void (fun_cmd_t) (unsigned int, char* []);
 
 /* ------------------------------
    command list
@@ -18,11 +22,18 @@ struct _cmd {
     char *comment;
 };
 
+struct proxy_cmd {
+    fun_cmd_t *fun;
+    unsigned int argc;
+    char *argv[];
+};
+
 static char *current_directory;
 
 static void ls(unsigned int argc, char *argv[]);
 static void cd(unsigned int argc, char *argv[]);
 static void mkdir(unsigned int argc, char *argv[]);
+static void compute(unsigned int argc, char *argv[]);
 static void help(unsigned int argc, char *argv[]);
 static void do_exit(unsigned int argc, char *argv[]);
 static void none(unsigned int argc, char *argv[]);
@@ -31,6 +42,7 @@ static struct _cmd commands [] = {
     {"ls", ls, 	"affiche le contenu d'un repertoire"},
     {"cd", cd,  "change de repertoire courrant"},
     {"mkdir", mkdir, "cree un nouveau repertoire"},
+    {"comppute", compute , "fait un calcul tres compliqué"},
     {"exit", do_exit,	"exit the prompt"},
     {"help", help,	"display this help"},
     {0, none,       "unknown command, try help"}
@@ -41,7 +53,7 @@ static struct _cmd commands [] = {
    ------------------------------------------------------------*/
 
 static void execute(unsigned int argc, char *argv[]) {
-    struct _cmd *c = commands; 
+    struct _cmd *c = commands;
     while (c->name && strcmp (argv[0], c->name))
         c++;
     (*c->fun)(argc, argv+1);
@@ -197,6 +209,20 @@ static void mkdir(unsigned int argc, char *argv[]) {
          printf("Not a valid path\n");
 }
 
+/* compute function */
+
+static void compute(unsigned int argc, char *argv[]) {
+    double tab [16634];
+    unsigned int i;
+    printf("Begin compute... \n");
+    for (i = 0 ; i < 16634 ; i++)
+        tab[i] = 1+i/i;
+    for (i = 0 ; i < 16634 ; i++)
+        printf("%f", tab[i]);
+    printf("End compute... \n");
+}
+
+
 /* print help */
 
 static void help(unsigned int argc, char *argv[]) {
@@ -219,8 +245,12 @@ static void none(unsigned int argc, char *argv[]) {
     printf ("%s\n", c->comment) ;
 }
 
-void empty(void* rien) {
 
+/* proxy function (void*) to any function */
+
+static void proxy_cmd(void * proxy) {
+    struct proxy_cmd *proxy_call = (struct proxy_cmd*)proxy;
+    (proxy_call->fun)(proxy_call->argc, proxy_call->argv);
 }
 
 /* main */
@@ -229,10 +259,12 @@ int main(int argc, char **argv) {
 
     mount();
 
+    proxy_cmd((void*)0);
+
     current_directory = (char*)malloc(sizeof(char)*MAX_PATH);
     strcpy(current_directory, "/");
 
-    /* dialog with user */ 
+    start_sched();
     loop();
 
     do_exit(0, NULL);
