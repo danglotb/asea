@@ -109,7 +109,7 @@ static void loop(void) {
     }
 }
 
-char * relative_to_absolute(char *pathname){
+/*char * relative_to_absolute(char *pathname){
     unsigned int i;
     unsigned int length;
     unsigned int indice;
@@ -121,10 +121,11 @@ char * relative_to_absolute(char *pathname){
         if(path[i] == '/'){
             strncpy(dir_name, path+indice; i - indice);
             indice = i;
+            printf("%s\n", dir_name);
         }
-
     }
-}
+    return NULL;
+}*/
 
 /* commands */
 
