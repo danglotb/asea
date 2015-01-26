@@ -2,24 +2,7 @@
 
 #include "hardware_config.h"
 
-static void _void_handler() {
-	return;
-}
-
-static void _init_irq() {
-	static int initialized = 0;
-	unsigned int i;
-
-	if(initialized)
-		return;
-
-	for(i=0; i<16; i++) {
-		IRQVECTOR[i] = _void_handler;
-	}
-}
-
 static void _goto_sector(unsigned int cylinder, unsigned int sector) {
-	check_hda();
 
 	PRINT_ASSERT_ERROR_MSG(cylinder < NB_CYLINDER && sector < NB_SECTOR, "Unvalid cylinder or sector size");
 
@@ -28,7 +11,7 @@ static void _goto_sector(unsigned int cylinder, unsigned int sector) {
 	_out(HDA_DATAREGS+2, (sector >> 8) & 0xFF);
 	_out(HDA_DATAREGS+3, sector & 0xFF);
 	_out(HDA_CMDREG, CMD_SEEK);
-
+	
 	_sleep(HDA_IRQ);
 }
 
@@ -54,23 +37,16 @@ void check_hda() {
 }
 
 void read_sector(unsigned int cylinder, unsigned int sector, unsigned char* buffer) {
-	check_hda();
-	_init_irq();
 
 	_goto_sector(cylinder, sector);
-
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_READ);
 	_sleep(HDA_IRQ);
-
 	memcpy(buffer, MASTERBUFFER, SECTOR_SIZE);
 }
 
 void read_sector_n(unsigned int cylinder, unsigned int sector, unsigned char* buffer, unsigned int n) {
-	check_hda();
-	_init_irq();
-
 
 	PRINT_ASSERT_ERROR_MSG(n < SECTOR_SIZE, "Parameter n need to be inferior to sector size");
 
@@ -85,9 +61,6 @@ void read_sector_n(unsigned int cylinder, unsigned int sector, unsigned char* bu
 }
 
 void write_sector(unsigned int cylinder, unsigned int sector, const unsigned char* buffer) {
-	check_hda();
-	_init_irq();
-
 
 	_goto_sector(cylinder, sector);
 
@@ -100,8 +73,6 @@ void write_sector(unsigned int cylinder, unsigned int sector, const unsigned cha
 }
 
 void write_sector_n(unsigned int cylinder, unsigned int sector, const unsigned char* buffer, unsigned int n) {
-	check_hda();
-	_init_irq();
 
 	PRINT_ASSERT_ERROR_MSG(n < SECTOR_SIZE, "Parameter n need to be inferior to sector size");
 
@@ -124,8 +95,6 @@ void write_sector_n(unsigned int cylinder, unsigned int sector, const unsigned c
 }
 
 void format_sector(unsigned int cylinder, unsigned int sector, unsigned int n_sector, unsigned int value) {
-	check_hda();
-	_init_irq();
 
 	_goto_sector(cylinder, sector);
 
