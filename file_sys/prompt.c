@@ -25,7 +25,7 @@ struct _cmd {
 struct proxy_cmd {
     fun_cmd_t *fun;
     unsigned int argc;
-    char *argv[];
+    char **argv;
 };
 
 static char *current_directory;
@@ -38,25 +38,37 @@ static void help(unsigned int argc, char *argv[]);
 static void do_exit(unsigned int argc, char *argv[]);
 static void none(unsigned int argc, char *argv[]);
 
+static void proxy_cmd(void *);
+
 static struct _cmd commands [] = {
     {"ls", ls, 	"affiche le contenu d'un repertoire"},
     {"cd", cd,  "change de repertoire courrant"},
     {"mkdir", mkdir, "cree un nouveau repertoire"},
-    {"comppute", compute , "fait un calcul tres compliqué"},
+    {"compute", compute , "fait un calcul tres compliqué"},
     {"exit", do_exit,	"exit the prompt"},
     {"help", help,	"display this help"},
     {0, none,       "unknown command, try help"}
 } ;
 
+
 /* ------------------------------
    dialog and execute 
    ------------------------------------------------------------*/
 
-static void execute(unsigned int argc, char *argv[]) {
+static void execute(unsigned int argc, char **argv) {
     struct _cmd *c = commands;
     while (c->name && strcmp (argv[0], c->name))
         c++;
-    (*c->fun)(argc, argv+1);
+    if(argv[argc][0] == '&'){
+        struct proxy_cmd *cmd;
+        cmd = (struct proxy_cmd *)malloc(sizeof(struct proxy_cmd));
+        cmd->fun = (*c->fun);
+        cmd->argc = argc--;
+        cmd->argv = argv;
+        create_ctx(STACK_SIZE, proxy_cmd, cmd);
+    } else {
+        (*c->fun)(argc, argv+1);
+    }
 }
 
 static void loop(void) {
@@ -212,13 +224,10 @@ static void mkdir(unsigned int argc, char *argv[]) {
 /* compute function */
 
 static void compute(unsigned int argc, char *argv[]) {
-    double tab [16634];
     unsigned int i;
     printf("Begin compute... \n");
-    for (i = 0 ; i < 16634 ; i++)
-        tab[i] = 1+i/i;
-    for (i = 0 ; i < 16634 ; i++)
-        printf("%f", tab[i]);
+    for (i = 0 ; i < 1663400000 ; i++)
+        i = i;
     printf("End compute... \n");
 }
 
@@ -259,12 +268,9 @@ int main(int argc, char **argv) {
 
     mount();
 
-    proxy_cmd((void*)0);
-
     current_directory = (char*)malloc(sizeof(char)*MAX_PATH);
     strcpy(current_directory, "/");
 
-    start_sched();
     loop();
 
     do_exit(0, NULL);
