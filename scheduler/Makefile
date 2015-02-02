@@ -1,9 +1,8 @@
 export OBJECTS_SCHED=$(addsuffix .o,\
-	 hw manage_ctx)
+	 manage_ctx)
 
-all: hw manage_ctx 
-hw:
-	$(CC) -c -g -m32 hw.c
+all: manage_ctx 
+
 manage_ctx: hw
 	$(CC) -c -g -m32 manage_ctx.c
 clean: 

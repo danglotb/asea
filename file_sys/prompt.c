@@ -164,10 +164,8 @@ static void ls(unsigned int argc, char *argv[]) {
     }
     inumber = inumber_of_path(pathname);
      if( inumber != 0) {
-printf("inif\n");
         file_desc_t fd;
         if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
-printf("inif\n");
             struct entry_s entry;
             while(read_ifile(&fd, &entry, sizeof(struct entry_s)) > 0) {
                 if(entry.inumber != 0)

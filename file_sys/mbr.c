@@ -6,9 +6,7 @@ void load_mbr() {
 	unsigned char buffer[SECTOR_SIZE];
 
 	PRINT_ASSERT_ERROR_MSG(SECTOR_SIZE > sizeof(mbr_t), "MBR Structure size (struct size need to be lower than sector size)");
-
 	read_sector(0, 0, buffer);
-
 	memcpy(&mbr, buffer, sizeof(mbr_t));
 
 	if(mbr._magic_number != _MBR_MAGIC_NUMBER) {

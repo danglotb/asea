@@ -16,7 +16,7 @@ LIBS    = -lhardware
 ###------------------------------------------------------------
 BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile ddir prompt
 OBJECTS	= $(addsuffix .o,\
-	  tools ifile mount mbr bloc_allocator inode drive dir)
+	  tools ifile mount mbr bloc_allocator inode drive dir manage_ctx)
 OBJECTS_SCHED_REL=$(addprefix ../,\
 	$(OBJECTS_SCHED))
 
@@ -36,11 +36,12 @@ pfile: pfile.o $(OBJECTS)
 dfile: dfile.o $(OBJECTS)
 cfile: cfile.o $(OBJECTS)
 ddir: ddir.o $(OBJECTS)
+prompt: prompt.o $(OBJECTS)
 
 % : %.o
 	$(CC) $(CFLAGS) -o $(BINDIR)/$@  $^ -L$(LIBDIR) $(LIBS)
-prompt: prompt.o $(OBJECTS)
-	$(CC) $(CFLAGS) -o $(BINDIR)/$@  $(OBJECTS_SCHED_REL)  $^ -L$(LIBDIR) $(LIBS)
+#prompt: prompt.o $(OBJECTS)
+#	$(CC) $(CFLAGS) -o $(BINDIR)/$@  $(OBJECTS_SCHED_REL)  $^ -L$(LIBDIR) $(LIBS)
 
 ###------------------------------
 ### #include dependences 
@@ -54,8 +55,9 @@ cfile.o: cfile.c ifile.h inode.h mount.h
 dfile.o: dfile.c ifile.h inode.h mount.h
 nfile.o: nfile.c ifile.h inode.h mount.h
 pfile.o: pfile.c ifile.h inode.h mount.h
+manage_ctx.o: manage_ctx.c manage_ctx.h
 ifile.o: ifile.c inode.h ifile.h 
-mount.o: mount.c config.h  
+mount.o: mount.c config.h manage_ctx.o
 tools.o: tools.c 
 dir.o: dir.c
 

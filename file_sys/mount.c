@@ -62,16 +62,16 @@ emptyIT()
     return;
 }
 
-static void tamer() {
-  printf("TAMER\n");
+static void
+timer_it() {
+    _yield();
+    _out(TIMER_ALARM,0xFFFFFFFE);
 }
 
 /* ------------------------------
    Initialization and finalization fucntions
    ------------------------------------------------------------*/
-void
-mount()
-{
+void mount(){
     char *hw_config;
     int status, i; 
 
@@ -82,17 +82,18 @@ mount()
     ffatal(status, "error in hardware initialization with %s\n", hw_config);
 
     check_hda();
-
     /* Interrupt handlers */
     for(i=0; i<16; i++) {
-	     if (i != 2) 
         IRQVECTOR[i] = emptyIT;
     }
 
-    IRQVECTOR[HDA_IRQ] = tamer;
-    
+    /* program timer */
+    IRQVECTOR[TIMER_IRQ] = timer_it;
+    _out(TIMER_PARAM,128+64+32+8); /* reset + alarm on + 8 tick / alarm */
+    _out(TIMER_ALARM,0xFFFFFFFE);   /* alarm at next tick (at 0xFFFFFFFF) */
+
     /* Allows all IT */
-    _mask(1);
+    _mask(0);
 
     /* Load MBR and current volume */
     load_mbr();
