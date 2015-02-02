@@ -16,7 +16,7 @@
 #include "tools.h"
 #include "hardware_config.h"
 #include "mbr.h"
-#include "../scheduler/manage_ctx.h"
+#include "manage_ctx.h"
 
 /* load super bloc of the $CURRENT_VOLUME
    set current_volume accordingly */
@@ -24,6 +24,8 @@
 extern int current_vol;
 extern int load_super(unsigned int);
 extern void save_super();
+
+
 
 void
 load_current_volume (int fatal_e)
@@ -64,14 +66,15 @@ emptyIT()
 
 static void
 timer_it() {
+    _out(TIMER_ALARM,0xFFFFFFFD);
     _yield();
-    _out(TIMER_ALARM,0xFFFFFFFE);
 }
 
-/* ------------------------------
-   Initialization and finalization fucntions
-   ------------------------------------------------------------*/
-void mount(){
+static void hda_irq(){
+    printf("hda_irq\n");
+}
+
+void boot() {
     char *hw_config;
     int status, i; 
 
@@ -89,12 +92,21 @@ void mount(){
 
     /* program timer */
     IRQVECTOR[TIMER_IRQ] = timer_it;
+    IRQVECTOR[HDA_IRQ] = hda_irq;
     _out(TIMER_PARAM,128+64+32+8); /* reset + alarm on + 8 tick / alarm */
-    _out(TIMER_ALARM,0xFFFFFFFE);   /* alarm at next tick (at 0xFFFFFFFF) */
+    _out(TIMER_ALARM,0xFFFFFFFD);   /* alarm at next tick (at 0xFFFFFFFF) */
 
     /* Allows all IT */
     _mask(0);
+}
 
+/* ------------------------------
+   Initialization and finalization fucntions
+   ------------------------------------------------------------*/
+void mount(){
+
+
+    sem_init(&lock_disk, 1); 
     /* Load MBR and current volume */
     load_mbr();
     load_current_volume(1);

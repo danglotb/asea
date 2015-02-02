@@ -17,8 +17,8 @@ LIBS    = -lhardware
 BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile ddir prompt
 OBJECTS	= $(addsuffix .o,\
 	  tools ifile mount mbr bloc_allocator inode drive dir manage_ctx)
-OBJECTS_SCHED_REL=$(addprefix ../,\
-	$(OBJECTS_SCHED))
+#OBJECTS_SCHED_REL=$(addprefix ../,\
+#	$(OBJECTS_SCHED))
 
 all: $(BINARIES) $(OBJECTS)
 

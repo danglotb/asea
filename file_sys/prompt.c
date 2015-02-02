@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <math.h>
 
-#include "../scheduler/manage_ctx.h"
+#include "manage_ctx.h"
 
 #define MAX_PATH 64
 #define STACK_SIZE 16384
@@ -53,9 +53,8 @@ static struct _cmd commands [] = {
     {"compute", compute , "fait un calcul tres compliqué"},
     {"exit", do_exit,	"exit the prompt"},
     {"help", help,	"display this help"},
-    {0, none,       "unknown command, try help"}
+    {0, none, "unknown command, try help"}
 } ;
-
 
 /* ------------------------------
    dialog and execute 
@@ -71,6 +70,7 @@ static void execute(unsigned int argc, char **argv) {
         cmd->fun = (*c->fun);
         cmd->argc = argc--;
         cmd->argv = argv;
+        printf("%s\n", argv[1]);
         create_ctx(STACK_SIZE, proxy_cmd, cmd);
     } else {
         (*c->fun)(argc, argv+1);
@@ -95,23 +95,26 @@ static void loop(void) {
         argc = 0;
         cpt = 0;
         while(name[i] != '\n'){
-            /*printf("name[%d] : %c\n", i, name[i]);*/
+            printf("name[%d] : %c\n", i, name[i]);
             if(name[i] == ' '){
-                argv[argc] = (char *)malloc(sizeof(char *)*i-cpt);
+                argv[argc] = (char *)malloc(sizeof(char)*(i-cpt));
                 strncpy(argv[argc], name+cpt, i-cpt);
-                /*printf("argc : %d\n", argc);
-                printf("argv : %s\n", argv[argc]);*/
+                printf("argc : %d\n", argc);
+                printf("argv : %s\n", argv[argc]);
                 argc++;
                 cpt = i+1;
 
             }
             i++;
         }
-        argv[argc] = (char *)malloc(sizeof(char *)*i-cpt);
+        argv[argc] = (char *)malloc(sizeof(char)*(i-cpt));
         strncpy(argv[argc], name+cpt, i-cpt);
-/*      printf("argc : %d\n", argc);
-        printf("argv : %s\n", argv[argc]);*/
-       execute(argc, argv);
+        printf("argc : %d\n", argc);
+        printf("argv : %s\n", argv[argc]);
+        execute(argc, argv);
+        for(i = 0; i < argc; i++){
+            free(argv[i]);
+        }
     }
 }
 
@@ -183,8 +186,10 @@ static void ls(unsigned int argc, char *argv[]) {
     inumber = inumber_of_path(pathname);
      if( inumber != 0) {
         file_desc_t fd;
+        printf("before onpen ifile\n");
         if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
             struct entry_s entry;
+            printf("before read_ifile\n");
             while(read_ifile(&fd, &entry, sizeof(struct entry_s)) > 0) {
                 if(entry.inumber != 0)
                     printf("%s\n", entry.name);
@@ -192,7 +197,6 @@ static void ls(unsigned int argc, char *argv[]) {
             close_ifile(&fd);
         }
     } else {
-           printf("Not a valid path\n");
            return;
         }
 }
@@ -274,8 +278,7 @@ static void do_exit(unsigned int argc, char *argv[]) {
 /* if unmatched command */
 
 static void none(unsigned int argc, char *argv[]) {
-    struct _cmd *c = commands;
-    printf ("%s\n", c->comment) ;
+    printf ("unknown command, try help\n") ;
 }
 
 
@@ -284,6 +287,7 @@ static void none(unsigned int argc, char *argv[]) {
 static void proxy_cmd(void * proxy) {
     struct proxy_cmd *proxy_call = (struct proxy_cmd*)proxy;
     (proxy_call->fun)(proxy_call->argc, proxy_call->argv);
+    free(proxy_call);
 }
 
 /* proxy function (void*) to loop function */
@@ -297,6 +301,7 @@ static void proxy_loop(void * proxy) {
 
 int main(int argc, char **argv) {
 
+    boot();
     mount();
 
     current_directory = (char*)malloc(sizeof(char)*MAX_PATH);

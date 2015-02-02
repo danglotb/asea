@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "manage_ctx.h"
+#include "mount.h"
 
 #include "utility.h"
 

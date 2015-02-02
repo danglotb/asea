@@ -138,7 +138,7 @@ unsigned int inumber_of_basename(unsigned int idir, const char* basename) {
     int ret;
     unsigned int inumber;
     struct entry_s entry;
-
+    printf("before open open_ifile\n");
     open_ifile(&fd, idir);
 
     ret = find_entry(&fd, basename);
@@ -171,7 +171,7 @@ unsigned int inumber_of_path(const char* pathname){
     str_cursor = 1;
     begin_cursor = 1;
     current_inumber = current_super_bloc.sb_inode_root;
-
+    printf("after superbloc call\n");
     if(pathname[1] == '\0')
         return current_inumber;
     

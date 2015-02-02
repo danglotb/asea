@@ -5,7 +5,7 @@
 static void _goto_sector(unsigned int cylinder, unsigned int sector) {
 
 	PRINT_ASSERT_ERROR_MSG(cylinder < NB_CYLINDER && sector < NB_SECTOR, "Unvalid cylinder or sector size");
-irq_disable();
+
 	_out(HDA_DATAREGS, (cylinder >> 8) & 0xFF);
 	_out(HDA_DATAREGS+1, cylinder & 0xFF);
 	_out(HDA_DATAREGS+2, (sector >> 8) & 0xFF);
@@ -13,7 +13,7 @@ irq_disable();
 	_out(HDA_CMDREG, CMD_SEEK);
 
 	_sleep(HDA_IRQ);
-irq_enable();
+
 }
 
 void check_hda() {
@@ -39,49 +39,66 @@ void check_hda() {
 
 void read_sector(unsigned int cylinder, unsigned int sector, unsigned char* buffer) {
 
+	sem_down(&lock_disk);
 	_goto_sector(cylinder, sector);
-irq_disable();
+
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_READ);
 	_sleep(HDA_IRQ);
-irq_enable();
+	printf("toto\n");
 	memcpy(buffer, MASTERBUFFER, SECTOR_SIZE);
+
+	sem_up(&lock_disk);
 }
 
 void read_sector_n(unsigned int cylinder, unsigned int sector, unsigned char* buffer, unsigned int n) {
 
+
 	PRINT_ASSERT_ERROR_MSG(n < SECTOR_SIZE, "Parameter n need to be inferior to sector size");
 
+	sem_down(&lock_disk);
+
 	_goto_sector(cylinder, sector);
-irq_disable();
+
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_READ);
 	_sleep(HDA_IRQ);
-irq_enable();
+
 	memcpy(buffer, MASTERBUFFER, n);
+	sem_up(&lock_disk);
+
 }
 
 void write_sector(unsigned int cylinder, unsigned int sector, const unsigned char* buffer) {
 
+	sem_down(&lock_disk);
+
 	_goto_sector(cylinder, sector);
 
 	memcpy(MASTERBUFFER, buffer, SECTOR_SIZE);
-irq_disable();
+
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_WRITE);
 	_sleep(HDA_IRQ);
-irq_enable();
+
+	sem_up(&lock_disk);
+
+
 }
 
 void write_sector_n(unsigned int cylinder, unsigned int sector, const unsigned char* buffer, unsigned int n) {
 
 	PRINT_ASSERT_ERROR_MSG(n < SECTOR_SIZE, "Parameter n need to be inferior to sector size");
 
+
+	sem_down(&lock_disk);
+
 	_goto_sector(cylinder, sector);
-irq_disable();
+	
+
 	/*
 	 *	Read sector
 	 */
@@ -96,13 +113,16 @@ irq_disable();
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_WRITE);
 	_sleep(HDA_IRQ);
-irq_enable();
+	sem_up(&lock_disk);
+
 }
 
 void format_sector(unsigned int cylinder, unsigned int sector, unsigned int n_sector, unsigned int value) {
 
+	sem_down(&lock_disk);
+
 	_goto_sector(cylinder, sector);
-irq_disable();
+
 	_out(HDA_DATAREGS, (n_sector >> 8) & 0xFF);
 	_out(HDA_DATAREGS+1, n_sector & 0xFF);
 	_out(HDA_DATAREGS+2, (value >> 24) & 0xFF);
@@ -111,5 +131,6 @@ irq_disable();
 	_out(HDA_DATAREGS+5, value & 0xFF);
 	_out(HDA_CMDREG, CMD_FORMAT);
 	_sleep(HDA_IRQ);
-irq_enable();
+
+	sem_up(&lock_disk);
 }

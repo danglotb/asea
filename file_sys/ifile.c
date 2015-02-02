@@ -66,19 +66,22 @@ open_ifile(file_desc_t *fd, unsigned int inumber)
 
     /* we are opening the designed file! */
     fd->fds_inumber = inumber;
-    read_inode (inumber, &inode);
+    printf("before read_inode\n");
+    read_inode(inumber, &inode);
     /* other trivial init */
     fd->fds_size = inode.ind_size;
     fd->fds_pos = 0;
 
     /* the buffer is full of zeros if the first bloc is zero, loaded
        with this first bloc otherwise */
+    printf("before vbloc\n");
     first_bloc = vbloc_of_fbloc(inumber, 0, FALSE);
     if (! first_bloc) 
 	   memset(fd->fds_buf, 0, DATA_BLOC_SIZE);
     else
 	   read_bloc(current_vol, first_bloc, fd->fds_buf);
 
+    printf("after read_bloc\n");
     /* last trivial */
     fd->fds_dirty = FALSE;
     

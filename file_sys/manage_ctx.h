@@ -1,3 +1,6 @@
+#ifndef _MANAGE_CTX_H
+#define _MANAGE_CTX_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -60,3 +63,5 @@ void mtx_unlock(struct mtx_s *mutex);
 
 void irq_disable();
 void irq_enable();
+
+#endif

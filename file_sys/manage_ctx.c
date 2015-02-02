@@ -14,6 +14,7 @@ int _init_ctx (struct ctx_s *pctx, int stack_size, func_t *f, void *args) {
 	pctx->f = f;
 	pctx->args = args;
 	pctx->next_wait = NULL;
+	irq_enable();
 	return 1;
 }
 
@@ -34,7 +35,7 @@ int create_ctx(int stack_size, func_t *f, void *args) {
 		head->next_ctx = new;
 		return _init_ctx(new, stack_size, f, args);
 	}
-	irq_enable();
+
 }
 
 /* initialisation d'un semaphore  Exercice 12 */
@@ -101,9 +102,11 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 
 /* appel caché du switch_to_ctx */
 void _yield() {
+	if (head == NULL) return;
 	if (current_ctx == NULL) {	
 		_switch_to_ctx(head);
 	} else {
+		if (current_ctx->next_ctx == current_ctx) return;
 		_switch_to_ctx(current_ctx->next_ctx);
 	} 
 }
@@ -160,11 +163,11 @@ void mtx_unlock(struct mtx_s *mutex) {
 
 
 void irq_disable() {
-	_mask(HDA_IRQ);
-	_out(TIMER_PARAM, 32+8);
+	/*_out(TIMER_PARAM, 32+8);
+*/	_mask(0xF);
 }
 
 void irq_enable() {
-	_out(TIMER_PARAM, 64+32+8);
+	/*_out(TIMER_PARAM, 64+32+8);*/
 	_mask(0);
 }
