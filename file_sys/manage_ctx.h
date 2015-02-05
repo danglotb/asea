@@ -36,7 +36,14 @@ struct mtx_s {
 	struct ctx_s *owner;
 };
 
+struct queue_hda_s {
+	struct ctx_s *queue_head;
+	struct queue_hda_s *queue_next;
+};
+
 struct ctx_s *head;
+
+struct queue_hda_s *head_hda;
 
 enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
 

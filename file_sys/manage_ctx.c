@@ -2,8 +2,6 @@
 
 static struct ctx_s *current_ctx;
 
-struct ctx_s *queue_hda = NULL;
-
 /* initialisation de contexte */
 int _init_ctx (struct ctx_s *pctx, int stack_size, func_t *f, void *args) {
 	pctx->stack = (unsigned char*)malloc(stack_size);
@@ -175,15 +173,17 @@ void irq_enable() {
 }
 
 void hda_request() {
-	if (queue_hda == NULL) {
-		queue_hda = current_ctx;
-		queue_hda->next_ctx = queue_hda;
+	if (head_hda == NULL) {
+		head_hda->queue_head = current_ctx;
+		head_hda->queue_next = head_hda;
 	} else {
-		struct ctx_s *tmp = queue_hda;
-		while (tmp->next_ctx != queue_hda) 
-			tmp = tmp->next_ctx;
-		tmp->next_ctx = current_ctx;
-		current_ctx->next_ctx = queue_hda;
+		struct queue_hda_s *new = (struct queue_hda_s*)malloc(sizeof(struct queue_hda_s));
+		struct queue_hda_s *tmp = head_hda;
+		while (tmp->queue_next != head_hda) 
+			tmp = tmp->queue_next;
+		tmp->queue_next = new;
+		new->queue_head = current_ctx;
+		new->queue_next = head_hda;
 	}
 	current_ctx->status = HDA_WAIT;
 	_yield();	

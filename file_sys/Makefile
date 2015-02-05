@@ -9,7 +9,7 @@ CFLAGS = -m32
 #CFLAGS	=  -ansi -pedantic 
 #CFLAGS  += -std=iso9899:1999 
 #CFLAGS  += -Werror -Wall
-#comment / uncomment
+#comment / uncommentm
 CFLAGS  += -g
 ROOTDIR=.
 BINDIR=./bin

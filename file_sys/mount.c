@@ -25,8 +25,6 @@ extern int current_vol;
 extern int load_super(unsigned int);
 extern void save_super();
 
-
-
 void
 load_current_volume (int fatal_e)
 {
