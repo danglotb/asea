@@ -74,5 +74,6 @@ void irq_disable();
 void irq_enable();
 
 void hda_request();
+void hda_end_request();
 
 #endif

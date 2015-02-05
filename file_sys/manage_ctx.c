@@ -188,3 +188,9 @@ void hda_request() {
 	current_ctx->status = HDA_WAIT;
 	_yield();	
 }
+
+void hda_end_request() {
+	head_hda->queue_head->status = ACTIVATED;
+	head_hda = head_hda->queue_next;
+	_yield();
+}

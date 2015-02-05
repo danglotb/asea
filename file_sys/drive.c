@@ -12,6 +12,7 @@ static void _goto_sector(unsigned int cylinder, unsigned int sector) {
 	_out(HDA_DATAREGS+3, sector & 0xFF);
 	_out(HDA_CMDREG, CMD_SEEK);
 
+	/*	hda_request(); */
 	_sleep(HDA_IRQ);
 
 }
@@ -45,6 +46,7 @@ void read_sector(unsigned int cylinder, unsigned int sector, unsigned char* buff
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_READ);
+
 /*	hda_request(); */
 	_sleep(HDA_IRQ);
 
@@ -65,6 +67,7 @@ void read_sector_n(unsigned int cylinder, unsigned int sector, unsigned char* bu
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_READ);
+	/*	hda_request(); */
 	_sleep(HDA_IRQ);
 
 	memcpy(buffer, MASTERBUFFER, n);
@@ -83,10 +86,11 @@ void write_sector(unsigned int cylinder, unsigned int sector, const unsigned cha
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_WRITE);
+
+	/*	hda_request(); */
 	_sleep(HDA_IRQ);
 
 	sem_up(&lock_disk);
-
 
 }
 
@@ -106,6 +110,8 @@ void write_sector_n(unsigned int cylinder, unsigned int sector, const unsigned c
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_READ);
+	
+	/*	hda_request(); */
 	_sleep(HDA_IRQ);
 
 	memcpy(MASTERBUFFER, buffer, n);
@@ -113,6 +119,8 @@ void write_sector_n(unsigned int cylinder, unsigned int sector, const unsigned c
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_WRITE);
+
+	/*	hda_request(); */
 	_sleep(HDA_IRQ);
 	sem_up(&lock_disk);
 
@@ -131,6 +139,8 @@ void format_sector(unsigned int cylinder, unsigned int sector, unsigned int n_se
 	_out(HDA_DATAREGS+4, (value >> 8) & 0xFF);
 	_out(HDA_DATAREGS+5, value & 0xFF);
 	_out(HDA_CMDREG, CMD_FORMAT);
+
+	/*	hda_request(); */
 	_sleep(HDA_IRQ);
 
 	sem_up(&lock_disk);

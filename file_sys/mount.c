@@ -69,7 +69,7 @@ timer_it() {
 }
 
 static void hda_irq(){
-   /* printf("hda_irq\n"); */
+    hda_end_request();
 }
 
 void boot() {
