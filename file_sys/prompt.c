@@ -95,13 +95,13 @@ static void loop(void) {
         argc = 0;
         cpt = 0;
         while(name[i] != '\n'){
-            printf("name[%d] : %c\n", i, name[i]);
+          /*  printf("name[%d] : %c\n", i, name[i]); */
             if(name[i] == ' '){
                 argv[argc] = (char *)malloc(sizeof(char)*(i-cpt));
                 strncpy(argv[argc], name+cpt, i-cpt);
-                printf("argc : %d\n", argc);
+            /*    printf("argc : %d\n", argc);
                 printf("argv : %s\n", argv[argc]);
-                argc++;
+            */  argc++;
                 cpt = i+1;
 
             }
@@ -109,9 +109,9 @@ static void loop(void) {
         }
         argv[argc] = (char *)malloc(sizeof(char)*(i-cpt));
         strncpy(argv[argc], name+cpt, i-cpt);
-        printf("argc : %d\n", argc);
+    /*  printf("argc : %d\n", argc);
         printf("argv : %s\n", argv[argc]);
-        execute(argc, argv);
+    */  execute(argc, argv);
         for(i = 0; i < argc; i++){
             free(argv[i]);
         }
@@ -167,7 +167,7 @@ static void cd(unsigned int argc, char * argv[]) {
 static void ls(unsigned int argc, char *argv[]) {
     unsigned int inumber;
     char pathname[MAX_PATH];
-    printf("current_directory : %s\n", current_directory);
+/*  printf("current_directory : %s\n", current_directory); */
 
     if(strlen(current_directory) > MAX_PATH) {
         printf("Actual path is too long\n");
@@ -186,10 +186,8 @@ static void ls(unsigned int argc, char *argv[]) {
     inumber = inumber_of_path(pathname);
      if( inumber != 0) {
         file_desc_t fd;
-        printf("before onpen ifile\n");
         if(open_ifile(&fd, inumber) != RETURN_FAILURE) {
             struct entry_s entry;
-            printf("before read_ifile\n");
             while(read_ifile(&fd, &entry, sizeof(struct entry_s)) > 0) {
                 if(entry.inumber != 0)
                     printf("%s\n", entry.name);

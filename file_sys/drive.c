@@ -45,8 +45,9 @@ void read_sector(unsigned int cylinder, unsigned int sector, unsigned char* buff
 	_out(HDA_DATAREGS, 0);
 	_out(HDA_DATAREGS+1, 1);
 	_out(HDA_CMDREG, CMD_READ);
+/*	hda_request(); */
 	_sleep(HDA_IRQ);
-	printf("toto\n");
+
 	memcpy(buffer, MASTERBUFFER, SECTOR_SIZE);
 
 	sem_up(&lock_disk);

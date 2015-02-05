@@ -2,6 +2,8 @@
 
 static struct ctx_s *current_ctx;
 
+struct ctx_s *queue_hda = NULL;
+
 /* initialisation de contexte */
 int _init_ctx (struct ctx_s *pctx, int stack_size, func_t *f, void *args) {
 	pctx->stack = (char*)malloc(stack_size);
@@ -82,9 +84,9 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 			: "r" (ctx->esp), "r" (ctx->ebp)
 	   );
 	irq_enable();
-	if (current_ctx->status == BLOCKED) {
+	if (current_ctx->status == BLOCKED || current_ctx->status == HDA_WAIT) {
 		struct ctx_s *tmp = current_ctx;
-		while (tmp->status == BLOCKED) { 
+		while (tmp->status == BLOCKED || tmp->status == HDA_WAIT) { 
 			tmp = current_ctx->next_ctx;
 			if (tmp == current_ctx)
 				exit(EXIT_FAILURE);
@@ -170,4 +172,19 @@ void irq_disable() {
 void irq_enable() {
 	/*_out(TIMER_PARAM, 64+32+8);*/
 	_mask(0);
+}
+
+void hda_request() {
+	if (queue_hda == NULL) {
+		queue_hda = current_ctx;
+		queue_hda->next_ctx = queue_hda;
+	} else {
+		struct ctx_s *tmp = queue_hda;
+		while (tmp->next_ctx != queue_hda) 
+			tmp = tmp->next_ctx;
+		tmp->next_ctx = current_ctx;
+		current_ctx->next_ctx = queue_hda;
+	}
+	current_ctx->status = HDA_WAIT;
+	_yield();	
 }

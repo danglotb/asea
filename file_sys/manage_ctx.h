@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include "hardware_config.h"
 
@@ -36,7 +37,7 @@ struct mtx_s {
 
 struct ctx_s *head;
 
-enum status {READY,ACTIVATED,TERMINATED,BLOCKED};
+enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
 
 #define dump_sp() \
 	do { 	\
@@ -63,5 +64,7 @@ void mtx_unlock(struct mtx_s *mutex);
 
 void irq_disable();
 void irq_enable();
+
+void hda_request();
 
 #endif
