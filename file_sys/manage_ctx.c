@@ -6,7 +6,7 @@ struct ctx_s *queue_hda = NULL;
 
 /* initialisation de contexte */
 int _init_ctx (struct ctx_s *pctx, int stack_size, func_t *f, void *args) {
-	pctx->stack = (char*)malloc(stack_size);
+	pctx->stack = (unsigned char*)malloc(stack_size);
 	if (!pctx->stack)
 		return 0;
 	pctx->ebp = &pctx->stack[stack_size - 4];

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include "hardware_config.h"
+#include "hardware.h"
 
 #define CTX_MAGIC 0x42
 #define SEM_MAGIC 0x23
