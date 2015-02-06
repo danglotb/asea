@@ -2,6 +2,8 @@
 
 static struct ctx_s *current_ctx;
 
+static struct ctx_s *ctx_wait_hda = NULL;
+
 /* initialisation de contexte */
 int _init_ctx (struct ctx_s *pctx, int stack_size, func_t *f, void *args) {
 	pctx->stack = (unsigned char*)malloc(stack_size);
@@ -192,6 +194,8 @@ void hda_request() {
 }
 
 void hda_end_request() {
-	ctx_wait_hda->status = ACTIVATED;
-	_switch_to_ctx(ctx_wait_hda);
+	if (ctx_wait_hda != NULL) {
+		ctx_wait_hda->status = ACTIVATED;
+		_switch_to_ctx(ctx_wait_hda);
+	}
 }
