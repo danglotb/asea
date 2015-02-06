@@ -173,7 +173,7 @@ void irq_enable() {
 }
 
 void hda_request() {
-	if (head_hda == NULL) {
+/*	if (head_hda == NULL) {
 		head_hda->queue_head = current_ctx;
 		head_hda->queue_next = head_hda;
 	} else {
@@ -185,12 +185,13 @@ void hda_request() {
 		new->queue_head = current_ctx;
 		new->queue_next = head_hda;
 	}
+*/
+	ctx_wait_hda = current_ctx;
 	current_ctx->status = HDA_WAIT;
 	_yield();	
 }
 
 void hda_end_request() {
-	head_hda->queue_head->status = ACTIVATED;
-	head_hda = head_hda->queue_next;
-	_yield();
+	ctx_wait_hda->status = ACTIVATED;
+	_switch_to_ctx(ctx_wait_hda);
 }

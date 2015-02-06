@@ -43,6 +43,8 @@ struct queue_hda_s {
 
 struct ctx_s *head;
 
+struct ctx_s *ctx_wait_hda;
+
 struct queue_hda_s *head_hda;
 
 enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
