@@ -39,9 +39,7 @@ void init_super(unsigned int vol) {
 int load_super(unsigned int vol) {
 	unsigned char buffer[SECTOR_SIZE];
 	struct super_bloc_t* sb = (struct super_bloc_t*)buffer;
-
 	read_bloc(vol, SUPER_BLOC_NUMBER, buffer);
-
 	if(sb->_magic_number != _SUPER_BLOC_MAGIC_NUMBER) {
 		return RETURN_FAILURE;
 	}

@@ -41,11 +41,11 @@ void save_mbr() {
 	unsigned char buffer[SECTOR_SIZE];
 
 	memcpy(buffer, &mbr, sizeof(mbr_t));
-
 	write_sector(0, 0, buffer);
 }
 
 void read_bloc(unsigned int volume, unsigned int block, unsigned char* buffer) {
+
 	read_sector(BLOCK_TO_CYLINDER(volume, block), BLOCK_TO_SECTOR(volume, block), buffer);
 }
 

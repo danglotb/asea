@@ -9,15 +9,11 @@ extern void load_current_volume (int fatal_e);
 extern char *get_hw_config ();
 
 int main() {
-	char *hw_config;
+	
+	 	sem_init(&lock_disk, 1); 
 
-    	hw_config = get_hw_config();
-
-    	init_hardware(hw_config);	
-
-    	load_mbr();
-
-    	load_current_volume(0);
+	    boot();
+	    mount();
 
 	init_super(current_vol);
 

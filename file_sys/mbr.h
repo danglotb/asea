@@ -41,7 +41,7 @@ typedef struct mbr_descr_s mbr_t;
 mbr_t mbr;
 
 /*
- * Convert couple of (Volume, Block) to Cynlinder
+ * Convert couple of (Volume, Block) to Cylinder
  */
 #define BLOCK_TO_CYLINDER(VOL, BLOCK) mbr.mbr_vol[VOL].vol_first_cylinder+(mbr.mbr_vol[VOL].vol_first_sector+BLOCK)/NB_SECTOR
 /*

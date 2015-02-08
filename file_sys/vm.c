@@ -214,9 +214,10 @@ void cmd_format() {
 int main() {
 
 	printf("\tVolume Manager\n\n");
+    sem_init(&lock_disk, 1); 
 
-	init_hardware(HDA_CFG_FILE);
-	load_mbr();
+    boot();
+    load_mbr();
 
 	while(1) {
 		int choice;
