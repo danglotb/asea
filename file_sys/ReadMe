@@ -1,0 +1,21 @@
+Benjamin DANGLOT
+Antoine PHILIPPE
+M1S2-ASEA- 
+Système de fichier avec ordonnanceur
+
+How to :
+	- Compilation du code via la commande "Make", s'assurer de la présence d'un répertoire bin pour les executables, ainsi que des librairies et fichiers de configurations de la librairie de simulation hardware.
+
+	- Pour créer et initialiser automatiquement le système de fichier sur le volume 0 (prenant toute la place sur le disque) lancer la commande bin/init_fs
+
+	- Sinon :
+		- Pour creer manuellement une nouvelle partition sur le disque, lancer bin/vm
+		puis suivre les instructions.
+		- Pour initialiser le système de fichier sur la partition courante, lancer bin/mknfs
+
+	- Pour démarrer le shell interractif fonctionnant sur le système de fichier, lancer bin/prompt.
+
+	- Commandes disponibles dans le shell : ls, cd, mkdir, help et exit.
+
+
+	La gestion des contextes fonctionne partiellement, des erreurs de gestion des contextes, notamment de l'anneau nous ont été signalés comme possible source d'erreur.

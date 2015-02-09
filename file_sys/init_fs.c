@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "dir.h"
 #include "mount.h"
 #include "mbr.h"
@@ -6,15 +7,22 @@
 #include "ifile.h"
 
 extern void load_current_volume (int fatal_e);
-extern char *get_hw_config ();
 
-int main() {
-	
-	 	sem_init(&lock_disk, 1); 
 
-	    boot();
-    load_mbr();
-    load_current_volume(0);
+int main(){
+
+	printf("Main partition creation...\n");
+	sem_init(&lock_disk, 1); 
+	boot();
+	load_mbr();
+	mbr.mbr_nb_vol = 1;
+	mbr.mbr_vol[0].vol_first_cylinder = 0;
+	mbr.mbr_vol[0].vol_first_sector = 1;
+	mbr.mbr_vol[0].vol_nb_sector = 32767;
+	save_mbr();
+	printf("Partition created !\n");
+	printf("Initialization of file system...\n");
+	load_current_volume(0);
 
 	init_super(current_vol);
 
@@ -37,7 +45,4 @@ int main() {
 	save_super();
 
 	printf("Volume %d initialized\n", current_vol);
-
-
-	return EXIT_SUCCESS;
 }

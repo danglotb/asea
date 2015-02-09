@@ -22,7 +22,7 @@ LIBS    = -lhardware
 ###------------------------------
 ### Main targets 
 ###------------------------------------------------------------
-BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile ddir prompt
+BINARIES= vm mknfs dfs ndir pdir nfile pfile dfile cfile ddir prompt init_fs
 OBJECTS	= $(addsuffix .o,\
 	  tools ifile mount mbr bloc_allocator inode drive dir manage_ctx)
 
@@ -32,6 +32,7 @@ all: $(BINARIES) $(OBJECTS)
 ###------------------------------
 ### Binaries
 ###------------------------------------------------------------
+init_fs: init_fs.o $(OBJECTS)
 vm: vm.o $(OBJECTS)
 mknfs: mknfs.o $(OBJECTS)
 dfs: dfs.o $(OBJECTS)
