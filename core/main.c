@@ -9,6 +9,11 @@
 #define CORE_IRQMAPPER 0x82
 #define CORE_ID 0x126
 
+#define TIMER_CLOCK	0xF0
+#define TIMER_PARAM 0xF4
+#define TIMER_ALARM 0xF8
+#define TIMER_IRQ 2   
+
 static void
 empty_it()
 {
@@ -29,7 +34,6 @@ static void compute() {
 static void
 timer_it() {
     _out(TIMER_ALARM,0xFFFFFFFD);
-    _yield();
 }
 
 static void timer(){
@@ -56,10 +60,13 @@ int main(){
     for(i=0; i<16; i++)
 		IRQVECTOR[i] = empty_it;
 
+	IRQVECTOR[TIMER_IRQ] = timer_it;
 	IRQVECTOR[0] = compute;
 	IRQVECTOR[1] = timer;
-	_out(CORE_IRQMAPPER+1, 0x1);
 	_out(CORE_IRQMAPPER+1, 0x1 << TIMER_IRQ);
+	for(i = 2; i < 4; i++){
+		_out(CORE_IRQMAPPER+i, 0);
+	}
 	_out(CORE_STATUS, 0xF);
 	_mask(0);
 	// IRQVECTOR[0] = timer;
