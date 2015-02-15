@@ -84,17 +84,9 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 			: "r" (ctx->esp), "r" (ctx->ebp)
 	   );
 	irq_enable();
-	if (current_ctx->status == BLOCKED || current_ctx->status == HDA_WAIT) {
-		struct ctx_s *tmp = current_ctx;
-		while (tmp->status == BLOCKED || tmp->status == HDA_WAIT) { 
-			tmp = current_ctx->next_ctx;
-			if (tmp == current_ctx)
-				exit(EXIT_FAILURE);
-		}
-		_switch_to_ctx(tmp);
-	} else if (current_ctx->status == READY) {
+
+	if (current_ctx->status == READY) {
 		current_ctx->status = ACTIVATED;
-		/*irq_enable();*/
 		current_ctx->f(current_ctx->args);
 		current_ctx->status = TERMINATED;
 		_yield();
@@ -108,7 +100,18 @@ void _yield() {
 	if (current_ctx == NULL) {	
 		_switch_to_ctx(head);
 	} else {
+
 		if (current_ctx->next_ctx == current_ctx) return;
+
+		if (current_ctx->next_ctx->status == BLOCKED || current_ctx->next_ctx->status == HDA_WAIT) {
+			struct ctx_s *tmp = current_ctx->next_ctx;
+			while (tmp->status == BLOCKED || tmp->status == HDA_WAIT) { 
+				tmp = current_ctx->next_ctx;
+				if (tmp == current_ctx)
+					exit(EXIT_FAILURE);
+			}
+			_switch_to_ctx(tmp);
+		}
 		_switch_to_ctx(current_ctx->next_ctx);
 	} 
 }
