@@ -57,7 +57,7 @@ void mtx_init(struct mtx_s *mutex) {
 void _switch_to_ctx(struct ctx_s *ctx ){
 	assert(ctx->ctx_magic == CTX_MAGIC);
 	irq_disable();
-	while (ctx->status == TERMINATED) {
+/*	while (ctx->status == TERMINATED) {
 		if (ctx->next_ctx == ctx)
 			exit(EXIT_SUCCESS);
 		if (ctx == head)
@@ -102,6 +102,23 @@ void _yield() {
 	} else {
 
 		if (current_ctx->next_ctx == current_ctx) return;
+
+		while (current_ctx->status == TERMINATED) {
+			struct ctx_s *tmp, *pred;
+			if (current_ctx == head)
+				head = current_ctx->next_ctx;
+			tmp = current_ctx;
+			current_ctx = current_ctx->next_ctx;
+
+			/* seek of pred */
+			pred = tmp->next_ctx;
+			while (pred->next_ctx != tmp)
+				pred = pred->next_ctx;
+			pred->next_ctx = tmp->next_ctx;
+
+			free(tmp->stack);
+			free(tmp);
+		}
 
 		if (current_ctx->next_ctx->status == BLOCKED || current_ctx->next_ctx->status == HDA_WAIT) {
 			struct ctx_s *tmp = current_ctx->next_ctx;
