@@ -57,16 +57,6 @@ void mtx_init(struct mtx_s *mutex) {
 void _switch_to_ctx(struct ctx_s *ctx ){
 	assert(ctx->ctx_magic == CTX_MAGIC);
 	irq_disable();
-/*	while (ctx->status == TERMINATED) {
-		if (ctx->next_ctx == ctx)
-			exit(EXIT_SUCCESS);
-		if (ctx == head)
-			head = ctx->next_ctx;
-		current_ctx->next_ctx = ctx->next_ctx;
-		free(ctx->stack);
-		free(ctx);
-		ctx = current_ctx->next_ctx;
-	}
 
 	/* init variable contexte courant (contexte appelant) */
 	if (current_ctx != NULL) {
@@ -135,9 +125,7 @@ void _yield() {
 
 /* appel caché a yield, et init les interruptions */
 void start_sched() {
-/*	setup_irq(TIMER_IRQ, _yield);
-	start_hw();
-*/	irq_enable();
+	irq_enable();
 	_yield();
 }
 
@@ -162,8 +150,6 @@ void sem_down(struct sem_s *sem) {
 
 void mtx_lock(struct mtx_s *mutex) {
 	sem_down(&(mutex->sem));
-//	if (current_ctx->status != BLOCKED)
-//		mutex->owner = current_ctx;
 }
 
 void sem_up(struct sem_s *sem){
@@ -177,37 +163,19 @@ void sem_up(struct sem_s *sem){
 }
 
 void mtx_unlock(struct mtx_s *mutex) {
-//	if (mutex->owner == current_ctx) {
-		sem_up(&(mutex->sem));
-//		mutex->owner = mutex->sem->head_wait;
-//	}
+	sem_up(&(mutex->sem));
 }
 
 
 void irq_disable() {
-	/*_out(TIMER_PARAM, 32+8);
-*/	_mask(0xF);
+	_mask(0xF);
 }
 
 void irq_enable() {
-	/*_out(TIMER_PARAM, 64+32+8);*/
 	_mask(0);
 }
 
 void hda_request() {
-/*	if (head_hda == NULL) {
-		head_hda->queue_head = current_ctx;
-		head_hda->queue_next = head_hda;
-	} else {
-		struct queue_hda_s *new = (struct queue_hda_s*)malloc(sizeof(struct queue_hda_s));
-		struct queue_hda_s *tmp = head_hda;
-		while (tmp->queue_next != head_hda) 
-			tmp = tmp->queue_next;
-		tmp->queue_next = new;
-		new->queue_head = current_ctx;
-		new->queue_next = head_hda;
-	}
-*/
 	ctx_wait_hda = current_ctx;
 	current_ctx->status = HDA_WAIT;
 	_yield();	
