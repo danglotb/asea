@@ -61,6 +61,18 @@ static void init(){
 		case 3:
 			compute();
 			break;
+		case 4:
+			timer();
+			break;
+		case 5:
+			compute();
+			break;
+		case 6:
+			timer();
+			break;
+		case 7:
+			compute();
+			break;
 	}
 }
 
@@ -68,13 +80,14 @@ static void init(){
 int main(){
 
 	unsigned int i;
+		int core_status;
     /* init hardware */
     if(init_hardware("etc/core.ini") == 0) {
 		fprintf(stderr, "Error in hardware initialization\n");
 		exit(EXIT_FAILURE);
     }
 
-	_out(CORE_STATUS, 0xF);
+	_out(CORE_STATUS, 0xAF);
 
     /* Interrupt handlers */
     for(i=0; i<16; i++)
@@ -85,13 +98,15 @@ int main(){
 	IRQVECTOR[1] = timer;
 
 	_out(CORE_IRQMAPPER+1, 0x1 << TIMER_IRQ);
-	for(i = 2; i < 4; i++){
+	for(i = 2; i < 8; i++){
 		_out(CORE_IRQMAPPER+i, 0);
 	}
 	_mask(0);
 	// IRQVECTOR[0] = timer;
 	// _out(CORE_IRQMAPPER, 0);
 	// _out(CORE_STATUS, 0x3);
+ 	core_status = _in(CORE_STATUS);
+	printf("core_status : %x\n", core_status);
 	compute();
 	return 0;
 }

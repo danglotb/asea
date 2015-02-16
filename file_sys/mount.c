@@ -76,6 +76,15 @@ static void init() {
     while (1){}
 }
 
+
+static void compute() {
+    unsigned int i;
+    printf("Begin compute... \n");
+    for (i = 0 ; i < 1663400000 ; i++)
+        i = i;
+    printf("End compute... \n");
+}
+
 void boot() {
     char *hw_config;
     int status, i; 
@@ -97,10 +106,12 @@ void boot() {
 
     /* program timer */
     IRQVECTOR[0] = init;
+    IRQVECTOR[1] = compute;
     IRQVECTOR[TIMER_IRQ] = timer_it;
     IRQVECTOR[HDA_IRQ] = hda_irq;
 
-    for (i = 0 ; i < )
+    for (i = 0 ; i < 16 ; i++)
+        _out(CORE_IRQMAPPER+i, 0x1 << 1);
 
     _out(TIMER_PARAM,128+64+32+8); /* reset + alarm on + 8 tick / alarm */
     _out(TIMER_ALARM,0xFFFFFFFD);   /* alarm at next tick (at 0xFFFFFFFF) */

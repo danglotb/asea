@@ -23,6 +23,7 @@ struct ctx_s {
 	int status;
 	struct ctx_s *next_ctx;
 	struct ctx_s *next_wait;
+	unsigned int assigned_core;
 };
 
 struct sem_s {
@@ -59,7 +60,7 @@ int create_ctx(int stack_size, func_t f, void *args);
 void sem_init(struct sem_s *sem, unsigned int val);
 void mtx_init(struct mtx_s *mutex);
 
-void _switch_to_ctx(struct ctx_s *ctx);
+void _switch_to_ctx(struct ctx_s *ctx, int assigned_core);
 void _yield();
 void start_sched();
 

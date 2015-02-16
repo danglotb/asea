@@ -123,7 +123,7 @@ void mtx_init(struct mtx_s *mutex) {
 	} 
 }*/
 
-void _switch_to_ctx(struct ctx_s *ctx ){
+void _switch_to_ctx(struct ctx_s *ctx, int assigned_core){
 	assert(ctx->ctx_magic == CTX_MAGIC);
 	irq_disable();
 	while (ctx->status == TERMINATED) {
@@ -160,30 +160,52 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 			if (tmp == current_ctx)
 				exit(EXIT_FAILURE);
 		}
-		_switch_to_ctx(tmp);
+		_switch_to_ctx(tmp, assigned_core);
 	} else if (current_ctx->status == READY) {
 		current_ctx->status = ACTIVATED;
+		current_ctx->assigned_core = assigned_core;
 		/*irq_enable();*/
-		current_ctx->f(current_ctx->args);
+		run_ctx(current_ctx, assigned_core);
+	//	current_ctx->f(current_ctx->args);
 		current_ctx->status = TERMINATED;
 		_yield();
 	}
 	return;
 }
 
+void run_ctx(struct ctx_s current_ctx, int assigned_core) {
+	if (_in(CORE_ID) == assigned_core)
+		current_ctx->f(current_ctx->args);
+}
+
 /* appel caché du switch_to_ctx */
 void _yield() {
 	if (head == NULL) return;
 	if (current_ctx == NULL) {	
-		_switch_to_ctx(head);
+		_switch_to_ctx(head, 0);
 	} else {
 		if (current_ctx->next_ctx == current_ctx) return;
-		_switch_to_ctx(current_ctx->next_ctx);
-	} 
+		_switch_to_ctx(current_ctx->next_ctx, manage_core();
+	}
 }
 
 
-
+int manage_core() {
+	int activ_core[2];
+	struct ctx_s curr;
+	int core_status = _in(CORE_STATUS), n_core = 0, max = -1;
+	printf("core_status : %d\n", core_status);
+	curr = head
+	while (curr->next_ctx != head) {
+		activ_core[curr->assigned_core]++;
+		if (max < activ_core[curr->assigned_core]) {
+			n_core = curr->assigned_core;
+			max = activ_core[curr->assigned_core];
+		}
+		curr = curr->next_ctx;
+	}
+	return n_core;
+}
 
 /* appel caché a yield, et init les interruptions */
 void start_sched() {
