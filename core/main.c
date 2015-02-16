@@ -4,15 +4,7 @@
 
 #include "include/hardware.h"
 
-
-#define CORE_STATUS 0x80
-#define CORE_IRQMAPPER 0x82
-#define CORE_ID 0x126
-
-#define TIMER_CLOCK	0xF0
-#define TIMER_PARAM 0xF4
-#define TIMER_ALARM 0xF8
-#define TIMER_IRQ 2   
+#include "manage_ctx.h"
 
 static void
 empty_it()
@@ -20,13 +12,13 @@ empty_it()
     return;
 }
 
-static void compute() {
+static void compute(void * args) {
     unsigned int i;
     unsigned int n_core;
     n_core = _in(CORE_ID);
     while(1){
 	    printf("compute core #%d\n", n_core);
-	    for (i = 0 ; i < 16634000 ; i++)
+	    for (i = 0 ; i < 1663400000 ; i++)
 	        i = i;
 	 }
 }
@@ -34,79 +26,99 @@ static void compute() {
 
 static void
 timer_it() {
-	_out(TIMER_PARAM, 128+64+32+8);
-    _out(TIMER_ALARM,0xFFFFFFFD);
-}
-
-static void timer(){
-    unsigned int i;
-    unsigned int n_core;
+	unsigned int n_core;
     n_core = _in(CORE_ID);
-    while(1){
-	    printf("timer core #%d\n", n_core);
-	    for (i = 0 ; i < 16634000 ; i++)
-	        i = i;
-	 }
+	printf("n_core :%d\n",n_core);
+    _out(TIMER_ALARM,0xFFFFFFFF-100);
+  //_yield();
 }
 
-static void init(){
+
+static void init_h(){
 	int n_core = _in(CORE_ID);
-	switch(n_core){
+	/*switch(n_core){
 		case 1:
-			compute();
+			compute(NULL);
 			break;
 		case 2:
-			timer();
+			compute(NULL);
 			break;
 		case 3:
-			compute();
+			compute(NULL);
 			break;
 		case 4:
-			timer();
+			compute(NULL);
 			break;
 		case 5:
-			compute();
+			compute(NULL);
 			break;
 		case 6:
-			timer();
+			compute(NULL);
 			break;
 		case 7:
-			compute();
+			compute(NULL);
 			break;
-	}
+	}*/
+	_mask(0);
+	printf("%d active\n", n_core);
+	/*start_sched();*/
+	while (1) {;}
+}
+
+static void init(void * args) {
+	int n_core = _in(CORE_ID);
+	printf("%d active\n", n_core);
+	_mask(0);
+	while (1) {;}
 }
 
 
 int main(){
 
 	unsigned int i;
-		int core_status;
+	int core_status;
+
+	create_ctx(16634, init, NULL,1);
+	create_ctx(16634, compute, NULL,1);
+	create_ctx(16634, init, NULL,2);
+	create_ctx(16634, compute, NULL,2);
+	create_ctx(16634, init, NULL,3);
+	create_ctx(16634, compute, NULL,3);
+
     /* init hardware */
     if(init_hardware("etc/core.ini") == 0) {
 		fprintf(stderr, "Error in hardware initialization\n");
 		exit(EXIT_FAILURE);
     }
 
-	_out(CORE_STATUS, 0xAF);
+	
 
     /* Interrupt handlers */
     for(i=0; i<16; i++)
 		IRQVECTOR[i] = empty_it;
 
-	IRQVECTOR[TIMER_IRQ] = timer_it;
-	IRQVECTOR[0] = init;
-	IRQVECTOR[1] = timer;
+	IRQVECTOR[0] = init_h;
 
-	_out(CORE_IRQMAPPER+1, 0x1 << TIMER_IRQ);
-	for(i = 2; i < 8; i++){
-		_out(CORE_IRQMAPPER+i, 0);
+	_out(TIMER_PARAM, 128+64+32+8);
+    _out(TIMER_ALARM,0xFFFFFFFF-100);
+
+	IRQVECTOR[TIMER_IRQ] = timer_it;
+
+	_out(CORE_STATUS, 0xF);
+
+	for(i = 0; i < 4 ; i++) {
+		_out(CORE_IRQMAPPER+i, 0x1 << TIMER_IRQ);
 	}
+
 	_mask(0);
+
 	// IRQVECTOR[0] = timer;
 	// _out(CORE_IRQMAPPER, 0);
 	// _out(CORE_STATUS, 0x3);
+
  	core_status = _in(CORE_STATUS);
-	printf("core_status : %x\n", core_status);
-	compute();
+	printf("core_status : %d\n", core_status);
+	start_sched();
+	compute(NULL);
 	return 0;
 }

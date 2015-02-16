@@ -42,8 +42,6 @@ load_current_volume (int fatal_e)
 	if(fatal_e) {
    		ffatal(!status, "unable to load super of vol %d", current_vol);
 	}
-
-	
 }
 
 /* return hw_config filename */
@@ -68,21 +66,22 @@ timer_it() {
     _yield();
 }
 
-static void hda_irq(){
+/*static void hda_irq(){
     hda_end_request();
 }
-
-static void init() {
-    while (1){}
+*/
+static void compute() {
+    unsigned int i;
+    int core = _in(CORE_ID);
+    printf("Begin compute... %d\n", core);
+    for (i = 0 ; i < 16634000 ; i++)
+        i = i;
+    printf("End compute... \n");
 }
 
 
-static void compute() {
-    unsigned int i;
-    printf("Begin compute... \n");
-    for (i = 0 ; i < 1663400000 ; i++)
-        i = i;
-    printf("End compute... \n");
+static void init() {
+    while (1){ compute();}
 }
 
 void boot() {
@@ -100,24 +99,23 @@ void boot() {
     _out(CORE_STATUS, 0xF);
 
     /* Interrupt handlers */
-    for(i=0; i<16; i++) {
+    for(i=0; i<16; i++)
         IRQVECTOR[i] = emptyIT;
-    }
 
-    /* program timer */
-    IRQVECTOR[0] = init;
-    IRQVECTOR[1] = compute;
     IRQVECTOR[TIMER_IRQ] = timer_it;
-    IRQVECTOR[HDA_IRQ] = hda_irq;
+    IRQVECTOR[0] = init;
 
-    for (i = 0 ; i < 16 ; i++)
-        _out(CORE_IRQMAPPER+i, 0x1 << 1);
+    _out(CORE_IRQMAPPER+1, 0x1 << TIMER_IRQ);
+    for(i = 2; i < 8; i++){
+        _out(CORE_IRQMAPPER+i, 0);
+    }
 
     _out(TIMER_PARAM,128+64+32+8); /* reset + alarm on + 8 tick / alarm */
     _out(TIMER_ALARM,0xFFFFFFFD);   /* alarm at next tick (at 0xFFFFFFFF) */
 
     /* Allows all IT */
     _mask(0);
+
 }
 
 /* ------------------------------

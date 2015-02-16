@@ -8,7 +8,7 @@ CFLAGS = -m32
 #doesn't work at home
 CFLAGS	+=  -ansi -pedantic 
 CFLAGS  += -std=iso9899:1999 
-CFLAGS  += -Werror -Wall
+CFLAGS  += -Werror -Wall -lpthread
 #comment / uncommentm
 CFLAGS  += -g
 ROOTDIR=.

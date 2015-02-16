@@ -21,20 +21,22 @@ int _init_ctx (struct ctx_s *pctx, int stack_size, func_t *f, void *args) {
 }
 
 /* creation caché des contextes (utilisations de init_ctx) */
-int create_ctx(int stack_size, func_t *f, void *args) {
+int create_ctx(int stack_size, func_t *f, void *args, int n_core) {
 	struct ctx_s *new = malloc(sizeof(struct ctx_s));
 	irq_disable();
 	/* malloc failed */	
 	if(!new)
 		return 0;
 	/* 1rst element */ 
-	if (head == NULL) {
-		head = new;
-		head->next_ctx = head;
-		return _init_ctx(head, stack_size, f, args);
+	if (head[n_core] == NULL) {
+		head[n_core] = new;
+		head[n_core]->next_ctx = head[n_core];
+		head[n_core]->assigned_core = n_core;
+		return _init_ctx(head[n_core], stack_size, f, args);
 	} else {
-		new->next_ctx = head->next_ctx;
-		head->next_ctx = new;
+		new->next_ctx = head[n_core]->next_ctx;
+		head[n_core]->next_ctx = new;
+		new->assigned_core = n_core;
 		return _init_ctx(new, stack_size, f, args);
 	}
 
@@ -134,7 +136,7 @@ void run_ctx(struct ctx_s *current_ctx, int assigned_core) {
 void _switch_to_ctx(struct ctx_s *ctx, int assigned_core){
 	assert(ctx->ctx_magic == CTX_MAGIC);
 	irq_disable();
-	while (ctx->status == TERMINATED) {
+/*	while (ctx->status == TERMINATED) {
 		if (ctx->next_ctx == ctx)
 			exit(EXIT_SUCCESS);
 		if (ctx == head)
@@ -144,7 +146,7 @@ void _switch_to_ctx(struct ctx_s *ctx, int assigned_core){
 		free(ctx);
 		ctx = current_ctx->next_ctx;
 	}
-
+*/
 	/* init variable contexte courant (contexte appelant) */
 	if (current_ctx != NULL) {
 		/* Sauvegarde de l'état du contexte courrant */
@@ -184,17 +186,20 @@ void _switch_to_ctx(struct ctx_s *ctx, int assigned_core){
 
 /* appel caché du switch_to_ctx */
 void _yield() {
-	if (head == NULL) return;
+	int n_core = _in(CORE_ID);
+printf("n_core:%d\n", n_core);
+	if (head[n_core] == NULL) return;
 	if (current_ctx == NULL) {	
-		_switch_to_ctx(head, 0);
+		_switch_to_ctx(head[n_core], 0);
 	} else {
 		if (current_ctx->next_ctx == current_ctx) return;
-		_switch_to_ctx(current_ctx->next_ctx, manage_core());
+		_switch_to_ctx(current_ctx->next_ctx, n_core);
+		//_switch_to_ctx(current_ctx->next_ctx);
 	}
 }
 
 
-int manage_core() {
+/*int manage_core() {
 	int activ_core[2];
 	struct ctx_s *curr;
 	int core_status = _in(CORE_STATUS), n_core = 1, max = -1;
@@ -210,7 +215,7 @@ int manage_core() {
 	}
 	return n_core;
 }
-
+*/
 /* appel caché a yield, et init les interruptions */
 void start_sched() {
 	irq_enable();
