@@ -11,6 +11,11 @@
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
+
+/* new .ini
 #define DEFAULT_HW_CONFIG "hardware.ini"
+*/
+
+#define DEFAULT_HW_CONFIG "core.ini"
 
 #endif

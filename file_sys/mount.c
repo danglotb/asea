@@ -72,6 +72,10 @@ static void hda_irq(){
     hda_end_request();
 }
 
+static void init() {
+    while (1){}
+}
+
 void boot() {
     char *hw_config;
     int status, i; 
@@ -83,14 +87,21 @@ void boot() {
     ffatal(status, "error in hardware initialization with %s\n", hw_config);
 
     check_hda();
+
+    _out(CORE_STATUS, 0xF);
+
     /* Interrupt handlers */
     for(i=0; i<16; i++) {
         IRQVECTOR[i] = emptyIT;
     }
 
     /* program timer */
+    IRQVECTOR[0] = init;
     IRQVECTOR[TIMER_IRQ] = timer_it;
     IRQVECTOR[HDA_IRQ] = hda_irq;
+
+    for (i = 0 ; i < )
+
     _out(TIMER_PARAM,128+64+32+8); /* reset + alarm on + 8 tick / alarm */
     _out(TIMER_ALARM,0xFFFFFFFD);   /* alarm at next tick (at 0xFFFFFFFF) */
 
@@ -102,9 +113,7 @@ void boot() {
    Initialization and finalization fucntions
    ------------------------------------------------------------*/
 void mount(){
-
-
-    sem_init(&lock_disk, 1); 
+    sem_init(&lock_disk, 1);
     /* Load MBR and current volume */
     load_mbr();
     load_current_volume(1);
