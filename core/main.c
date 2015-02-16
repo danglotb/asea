@@ -31,8 +31,10 @@ static void compute() {
 	 }
 }
 
+
 static void
 timer_it() {
+	_out(TIMER_PARAM, 128+64+32+8);
     _out(TIMER_ALARM,0xFFFFFFFD);
 }
 
@@ -47,6 +49,22 @@ static void timer(){
 	 }
 }
 
+static void init(){
+	int n_core = _in(CORE_ID);
+	switch(n_core){
+		case 1:
+			compute();
+			break;
+		case 2:
+			timer();
+			break;
+		case 3:
+			compute();
+			break;
+	}
+}
+
+
 int main(){
 
 	unsigned int i;
@@ -56,18 +74,20 @@ int main(){
 		exit(EXIT_FAILURE);
     }
 
-    /* Interreupt handlers */
+	_out(CORE_STATUS, 0xF);
+
+    /* Interrupt handlers */
     for(i=0; i<16; i++)
 		IRQVECTOR[i] = empty_it;
 
 	IRQVECTOR[TIMER_IRQ] = timer_it;
-	IRQVECTOR[0] = compute;
+	IRQVECTOR[0] = init;
 	IRQVECTOR[1] = timer;
+
 	_out(CORE_IRQMAPPER+1, 0x1 << TIMER_IRQ);
 	for(i = 2; i < 4; i++){
 		_out(CORE_IRQMAPPER+i, 0);
 	}
-	_out(CORE_STATUS, 0xF);
 	_mask(0);
 	// IRQVECTOR[0] = timer;
 	// _out(CORE_IRQMAPPER, 0);
