@@ -54,14 +54,14 @@ void mtx_init(struct mtx_s *mutex) {
 }
 
 
-void _switch_to_ctx(struct ctx_s *ctx ){
+/*void _switch_to_ctx(struct ctx_s *ctx ){
 	assert(ctx->ctx_magic == CTX_MAGIC);
 	irq_disable();
 
 	/* init variable contexte courant (contexte appelant) */
-	if (current_ctx != NULL) {
+/*	if (current_ctx != NULL) {
 		/* Sauvegarde de l'état du contexte courrant */
-		asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
+/*		asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
 				: "=r" (current_ctx->esp), "=r" (current_ctx->ebp)
 	   	);
 	}
@@ -69,7 +69,7 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 	current_ctx = ctx;
 
 	/* Changement des registres et donc du contexte courant */
-	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
+/*	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
 			:
 			: "r" (ctx->esp), "r" (ctx->ebp)
 	   );
@@ -82,10 +82,10 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 		_yield();
 	}
 	return;
-}
+}*/
 
 /* appel caché du switch_to_ctx */
-void _yield() {
+/*void _yield() {
 	if (head == NULL) return;
 	if (current_ctx == NULL) {	
 		_switch_to_ctx(head);
@@ -101,7 +101,7 @@ void _yield() {
 			current_ctx = current_ctx->next_ctx;
 
 			/* seek of pred */
-			pred = tmp->next_ctx;
+/*			pred = tmp->next_ctx;
 			while (pred->next_ctx != tmp)
 				pred = pred->next_ctx;
 			pred->next_ctx = tmp->next_ctx;
@@ -121,7 +121,69 @@ void _yield() {
 		}
 		_switch_to_ctx(current_ctx->next_ctx);
 	} 
+}*/
+
+void _switch_to_ctx(struct ctx_s *ctx ){
+	assert(ctx->ctx_magic == CTX_MAGIC);
+	irq_disable();
+	while (ctx->status == TERMINATED) {
+		if (ctx->next_ctx == ctx)
+			exit(EXIT_SUCCESS);
+		if (ctx == head)
+			head = ctx->next_ctx;
+		current_ctx->next_ctx = ctx->next_ctx;
+		free(ctx->stack);
+		free(ctx);
+		ctx = current_ctx->next_ctx;
+	}
+
+	/* init variable contexte courant (contexte appelant) */
+	if (current_ctx != NULL) {
+		/* Sauvegarde de l'état du contexte courrant */
+		asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
+				: "=r" (current_ctx->esp), "=r" (current_ctx->ebp)
+	   	);
+	}
+
+	current_ctx = ctx;
+
+	/* Changement des registres et donc du contexte courant */
+	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
+			:
+			: "r" (ctx->esp), "r" (ctx->ebp)
+	   );
+	irq_enable();
+	if (current_ctx->status == BLOCKED) {
+		struct ctx_s *tmp = current_ctx;
+		while (tmp->status == BLOCKED) { 
+			tmp = current_ctx->next_ctx;
+			if (tmp == current_ctx)
+				exit(EXIT_FAILURE);
+		}
+		_switch_to_ctx(tmp);
+	} else if (current_ctx->status == READY) {
+		current_ctx->status = ACTIVATED;
+		/*irq_enable();*/
+		current_ctx->f(current_ctx->args);
+		current_ctx->status = TERMINATED;
+		_yield();
+	}
+	return;
 }
+
+/* appel caché du switch_to_ctx */
+void _yield() {
+	if (head == NULL) return;
+	if (current_ctx == NULL) {	
+		_switch_to_ctx(head);
+	} else {
+		if (current_ctx->next_ctx == current_ctx) return;
+		_switch_to_ctx(current_ctx->next_ctx);
+	} 
+}
+
+
+
 
 /* appel caché a yield, et init les interruptions */
 void start_sched() {
