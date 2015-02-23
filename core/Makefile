@@ -31,7 +31,7 @@ main: main.o $(OBJECTS)
 % : %.o
 	$(CC) $(CFLAGS) -o $(BINDIR)/$@ $^ -L$(LIBDIR) $(LIBS)
 
-manage_ctx.o:
+manage_ctx.o: manage_ctx.h manage_ctx.c
 	gcc -I$(INCDIR) -g -m32 -c manage_ctx.c 
 
 %.o: %.c

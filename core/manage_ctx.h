@@ -15,7 +15,7 @@
 #define TIMER_CLOCK	0xF0
 #define TIMER_PARAM 0xF4
 #define TIMER_ALARM 0xF8
-#define TIMER_IRQ 2  
+#define TIMER_IRQ 2
 
 #define CTX_MAGIC 0x42
 #define SEM_MAGIC 0x23
@@ -51,7 +51,7 @@ struct queue_hda_s {
 	struct queue_hda_s *queue_next;
 };
 
-struct ctx_s *head [3];
+struct ctx_s *head [4];
 
 enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
 
@@ -69,7 +69,7 @@ int create_ctx(int stack_size, func_t f, void *args, int n_core);
 void sem_init(struct sem_s *sem, unsigned int val);
 void mtx_init(struct mtx_s *mutex);
 
-void _switch_to_ctx(struct ctx_s *ctx, int assigned_core);
+void _switch_to_ctx(struct ctx_s *ctx);
 void _yield();
 void start_sched();
 

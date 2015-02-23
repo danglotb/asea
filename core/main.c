@@ -6,6 +6,9 @@
 
 #include "manage_ctx.h"
 
+extern struct ctx_s *head [4];
+extern struct ctx_s *current_ctx[4]; 
+
 static void
 empty_it()
 {
@@ -23,67 +26,48 @@ static void compute(void * args) {
 	 }
 }
 
-
-static void
-timer_it() {
-	unsigned int n_core;
-    n_core = _in(CORE_ID);
-	printf("n_core :%d\n",n_core);
-    _out(TIMER_ALARM,0xFFFFFFFF-100);
-  //_yield();
+static void compute2(void * args) {
+    unsigned int i;
+    unsigned int n_core;
+	n_core = _in(CORE_ID);
+    while(1){
+	    printf("compute 2 core #%d\n", n_core);
+	    for (i = 0 ; i < 1663400000 ; i++)
+	        i = i;
+	 }
 }
 
 
-static void init_h(){
-	int n_core = _in(CORE_ID);
-	/*switch(n_core){
-		case 1:
-			compute(NULL);
-			break;
-		case 2:
-			compute(NULL);
-			break;
-		case 3:
-			compute(NULL);
-			break;
-		case 4:
-			compute(NULL);
-			break;
-		case 5:
-			compute(NULL);
-			break;
-		case 6:
-			compute(NULL);
-			break;
-		case 7:
-			compute(NULL);
-			break;
-	}*/
-	_mask(0);
-	printf("%d active\n", n_core);
-	/*start_sched();*/
-	while (1) {;}
+static void timer_it() {
+	unsigned int n_core = _in(CORE_ID);
+	printf("n_core:%d\n",n_core);
+    _out(TIMER_ALARM,0xFFFFFFFF-20);
+ 	_yield();
 }
 
-static void init(void * args) {
+static void init() {
 	int n_core = _in(CORE_ID);
 	printf("%d active\n", n_core);
-	_mask(0);
+	start_sched();
 	while (1) {;}
 }
 
 
-int main(){
+int main() {
 
 	unsigned int i;
-	int core_status;
 
-	create_ctx(16634, init, NULL,1);
+	for (i = 0 ; i < 4 ; i++) {
+		head[i] = NULL;
+		current_ctx[i] = NULL;
+	}
+
+	create_ctx(16634, compute2, NULL,0);
+	create_ctx(16634, compute, NULL,0);
+	create_ctx(16634, compute2, NULL,1);	
 	create_ctx(16634, compute, NULL,1);
-	create_ctx(16634, init, NULL,2);
+	create_ctx(16634, compute2, NULL,2);
 	create_ctx(16634, compute, NULL,2);
-	create_ctx(16634, init, NULL,3);
-	create_ctx(16634, compute, NULL,3);
 
     /* init hardware */
     if(init_hardware("etc/core.ini") == 0) {
@@ -91,34 +75,23 @@ int main(){
 		exit(EXIT_FAILURE);
     }
 
-	
-
     /* Interrupt handlers */
     for(i=0; i<16; i++)
 		IRQVECTOR[i] = empty_it;
 
-	IRQVECTOR[0] = init_h;
-
-	_out(TIMER_PARAM, 128+64+32+8);
-    _out(TIMER_ALARM,0xFFFFFFFF-100);
+	IRQVECTOR[0] = init;
 
 	IRQVECTOR[TIMER_IRQ] = timer_it;
 
-	_out(CORE_STATUS, 0xF);
+	_out(CORE_STATUS, 0x7);
 
-	for(i = 0; i < 4 ; i++) {
-		_out(CORE_IRQMAPPER+i, 0x1 << TIMER_IRQ);
+    for(i = 0; i < 3 ; i++) {
+		_out(CORE_IRQMAPPER+i, 1 << TIMER_IRQ);
 	}
 
-	_mask(0);
+	_out(TIMER_PARAM, 128+64+32+8);
+    _out(TIMER_ALARM, 0xFFFFFFFF-100);
 
-	// IRQVECTOR[0] = timer;
-	// _out(CORE_IRQMAPPER, 0);
-	// _out(CORE_STATUS, 0x3);
-
- 	core_status = _in(CORE_STATUS);
-	printf("core_status : %d\n", core_status);
-	start_sched();
-	compute(NULL);
+	init();
 	return 0;
 }

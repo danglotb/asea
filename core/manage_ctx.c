@@ -1,6 +1,6 @@
 #include "manage_ctx.h"
 
-static struct ctx_s *current_ctx;
+struct ctx_s *current_ctx[4];
 
 static struct ctx_s *ctx_wait_hda = NULL;
 
@@ -56,54 +56,71 @@ void mtx_init(struct mtx_s *mutex) {
 }
 
 
-/*void _switch_to_ctx(struct ctx_s *ctx ){
+/* appel caché a yield, et init les interruptions */
+void start_sched() {
+	irq_enable();
+	_yield();
+}
+
+void _switch_to_ctx(struct ctx_s *ctx ){
+	static int n_core;
+	n_core = _in(CORE_ID);
 	assert(ctx->ctx_magic == CTX_MAGIC);
 	irq_disable();
 
 	/* init variable contexte courant (contexte appelant) */
-/*	if (current_ctx != NULL) {
+	if (current_ctx[n_core] != NULL) {
 		/* Sauvegarde de l'état du contexte courrant */
-/*		asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
-				: "=r" (current_ctx->esp), "=r" (current_ctx->ebp)
+		asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
+				: "=r" (current_ctx[n_core]->esp), "=r" (current_ctx[n_core]->ebp)
 	   	);
 	}
 
-	current_ctx = ctx;
+	current_ctx[n_core] = ctx;
 
 	/* Changement des registres et donc du contexte courant */
-/*	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
+	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
 			:
 			: "r" (ctx->esp), "r" (ctx->ebp)
 	   );
+
 	irq_enable();
 
-	if (current_ctx->status == READY) {
-		current_ctx->status = ACTIVATED;
-		current_ctx->f(current_ctx->args);
-		current_ctx->status = TERMINATED;
+	if (current_ctx[n_core]->status == READY) {
+		current_ctx[n_core]->status = ACTIVATED;
+		current_ctx[n_core]->f(current_ctx[n_core]->args);
+		current_ctx[n_core]->status = TERMINATED;
 		_yield();
 	}
 	return;
-}*/
+}
 
 /* appel caché du switch_to_ctx */
-/*void _yield() {
-	if (head == NULL) return;
-	if (current_ctx == NULL) {	
-		_switch_to_ctx(head);
+void _yield() {
+	static int n_core;
+	n_core = _in(CORE_ID);
+	if (head[n_core] == NULL) return;
+	if (current_ctx[n_core] == NULL) {	
+		_switch_to_ctx(head[n_core]);
 	} else {
 
-		if (current_ctx->next_ctx == current_ctx) return;
+		if (current_ctx[n_core]->next_ctx == current_ctx[n_core]) return;
 
-		while (current_ctx->status == TERMINATED) {
+		while (current_ctx[n_core]->status == TERMINATED) {
 			struct ctx_s *tmp, *pred;
-			if (current_ctx == head)
-				head = current_ctx->next_ctx;
-			tmp = current_ctx;
-			current_ctx = current_ctx->next_ctx;
+			if (current_ctx[n_core] == head[n_core])
+				head[n_core] = current_ctx[n_core]->next_ctx;
+			tmp = current_ctx[n_core];
+			current_ctx[n_core] = current_ctx[n_core]->next_ctx;
+
+			if(tmp->next_ctx == current_ctx[n_core]) {
+				free(tmp->stack);
+				free(tmp);
+				exit(EXIT_SUCCESS);
+			}
 
 			/* seek of pred */
-/*			pred = tmp->next_ctx;
+			pred = tmp->next_ctx;
 			while (pred->next_ctx != tmp)
 				pred = pred->next_ctx;
 			pred->next_ctx = tmp->next_ctx;
@@ -112,129 +129,33 @@ void mtx_init(struct mtx_s *mutex) {
 			free(tmp);
 		}
 
-		if (current_ctx->next_ctx->status == BLOCKED || current_ctx->next_ctx->status == HDA_WAIT) {
-			struct ctx_s *tmp = current_ctx->next_ctx;
-			while (tmp->status == BLOCKED || tmp->status == HDA_WAIT) { 
-				tmp = current_ctx->next_ctx;
-				if (tmp == current_ctx)
+		if (current_ctx[n_core]->next_ctx->status == BLOCKED) {
+			struct ctx_s *tmp = current_ctx[n_core]->next_ctx;
+			while (tmp->status == BLOCKED) { 
+				tmp = current_ctx[n_core]->next_ctx;
+				if (tmp == current_ctx[n_core])
 					exit(EXIT_FAILURE);
 			}
 			_switch_to_ctx(tmp);
 		}
-		_switch_to_ctx(current_ctx->next_ctx);
+		_switch_to_ctx(current_ctx[n_core]->next_ctx);
 	} 
-}*/
-
-
-void run_ctx(struct ctx_s *current_ctx, int assigned_core) {
-	if (_in(CORE_ID) == assigned_core) {
-		printf("assigned_core:%d\n", assigned_core);
-		current_ctx->f(current_ctx->args);
-	}
-}
-
-void _switch_to_ctx(struct ctx_s *ctx, int assigned_core){
-	assert(ctx->ctx_magic == CTX_MAGIC);
-	irq_disable();
-/*	while (ctx->status == TERMINATED) {
-		if (ctx->next_ctx == ctx)
-			exit(EXIT_SUCCESS);
-		if (ctx == head)
-			head = ctx->next_ctx;
-		current_ctx->next_ctx = ctx->next_ctx;
-		free(ctx->stack);
-		free(ctx);
-		ctx = current_ctx->next_ctx;
-	}
-*/
-	/* init variable contexte courant (contexte appelant) */
-	if (current_ctx != NULL) {
-		/* Sauvegarde de l'état du contexte courrant */
-		asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
-				: "=r" (current_ctx->esp), "=r" (current_ctx->ebp)
-	   	);
-	}
-
-	current_ctx = ctx;
-
-	/* Changement des registres et donc du contexte courant */
-	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
-			:
-			: "r" (ctx->esp), "r" (ctx->ebp)
-	   );
-	irq_enable();
-	if (current_ctx->status == BLOCKED) {
-		struct ctx_s *tmp = current_ctx;
-		while (tmp->status == BLOCKED) { 
-			tmp = current_ctx->next_ctx;
-			if (tmp == current_ctx)
-				exit(EXIT_FAILURE);
-		}
-		_switch_to_ctx(tmp, assigned_core);
-	} else if (current_ctx->status == READY) {
-		current_ctx->status = ACTIVATED;
-		current_ctx->assigned_core = assigned_core;
-		/*irq_enable();*/
-		run_ctx(current_ctx, assigned_core);
-	//	current_ctx->f(current_ctx->args);
-		current_ctx->status = TERMINATED;
-		_yield();
-	}
-	return;
-}
-
-
-/* appel caché du switch_to_ctx */
-void _yield() {
-	int n_core = _in(CORE_ID);
-printf("n_core:%d\n", n_core);
-	if (head[n_core] == NULL) return;
-	if (current_ctx == NULL) {	
-		_switch_to_ctx(head[n_core], 0);
-	} else {
-		if (current_ctx->next_ctx == current_ctx) return;
-		_switch_to_ctx(current_ctx->next_ctx, n_core);
-		//_switch_to_ctx(current_ctx->next_ctx);
-	}
-}
-
-
-/*int manage_core() {
-	int activ_core[2];
-	struct ctx_s *curr;
-	int core_status = _in(CORE_STATUS), n_core = 1, max = -1;
-	//printf("core_status : %x\n", core_status);
-	curr = head;
-	while (curr->next_ctx != head) {
-		activ_core[curr->assigned_core]++;
-		if (max < activ_core[curr->assigned_core]) {
-			n_core = curr->assigned_core;
-			max = activ_core[curr->assigned_core];
-		}
-		curr = curr->next_ctx;
-	}
-	return n_core;
-}
-*/
-/* appel caché a yield, et init les interruptions */
-void start_sched() {
-	irq_enable();
-	_yield();
 }
 
 void sem_down(struct sem_s *sem) {
+	int n_core = _in(CORE_ID);
 	irq_disable();
 	sem->value--;
 	if(sem->value < 0) {
-		current_ctx->status = BLOCKED;
+		current_ctx[n_core]->status = BLOCKED;
 		if (sem->head_wait != NULL) {
 			struct ctx_s *tmp;
 			tmp = sem->head_wait->next_wait;
 			while (tmp->next_wait != NULL)
 				tmp = tmp->next_wait;
-			tmp->next_wait = current_ctx;
+			tmp->next_wait = current_ctx[n_core];
 		} else 
-			sem->head_wait = current_ctx;
+			sem->head_wait = current_ctx[n_core];
 		irq_enable();
 		_yield();
 	}
@@ -269,8 +190,9 @@ void irq_enable() {
 }
 
 void hda_request() {
-	ctx_wait_hda = current_ctx;
-	current_ctx->status = HDA_WAIT;
+	int n_core = _in(CORE_ID);
+	ctx_wait_hda = current_ctx[n_core];
+	current_ctx[n_core]->status = HDA_WAIT;
 	_yield();	
 }
 
