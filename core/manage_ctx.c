@@ -1,7 +1,6 @@
 #include "manage_ctx.h"
 
 struct ctx_s *current_ctx[4];
-
 static struct ctx_s *ctx_wait_hda = NULL;
 
 /* initialisation de contexte */
@@ -62,37 +61,6 @@ void start_sched() {
 	_yield();
 }
 
-void save_ctx() {
-	static int n_core;
-	n_core = _in(CORE_ID);
-
-	irq_disable();
-
-	/* Sauvegarde de l'état du contexte courrant */
-	asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
-			: "=r" (main_ctx[n_core].esp), "=r" (main_ctx[n_core].ebp)
-	 	);
-	
-	irq_enable();
-}
-
-void _switch_to_main() {
-	static int n_core;
-	n_core = _in(CORE_ID);
-
-	irq_disable();
-
-	current_ctx[n_core] = &main_ctx[n_core];
-
-	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
-		:
-		: "r" (main_ctx[n_core].esp), "r" (main_ctx[n_core].ebp)
-	);
-
-	irq_enable();
-
-}
-
 void _switch_to_ctx(struct ctx_s *ctx ){
 	static int n_core;
 	n_core = _in(CORE_ID);
@@ -109,6 +77,7 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 	}
 
 	current_ctx[n_core] = ctx;
+
 
 	/* Changement des registres et donc du contexte courant */
 	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
@@ -188,6 +157,7 @@ void sem_down(struct sem_s *sem) {
 			tmp->next_wait = current_ctx[n_core];
 		} else 
 			sem->head_wait = current_ctx[n_core];
+
 		irq_enable();
 		_yield();
 	}

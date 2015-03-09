@@ -51,7 +51,7 @@ struct queue_hda_s {
 	struct queue_hda_s *queue_next;
 };
 
-struct ctx_s main_ctx[4];
+
 struct ctx_s *head [4];
 
 enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
@@ -70,9 +70,6 @@ int create_ctx(int stack_size, func_t f, void *args, int n_core);
 void sem_init(struct sem_s *sem, unsigned int val);
 void mtx_init(struct mtx_s *mutex);
 
-
-void _switch_to_main();
-void save_ctx();
 void _switch_to_ctx(struct ctx_s *ctx);
 void _yield();
 void start_sched();
