@@ -6,7 +6,7 @@
 #include <string.h>
 #include <assert.h>
 #include "hardware_config.h"
-#include "hardware.h"
+#include "include/hardware.h"
 
 #define CTX_MAGIC 0x42
 #define SEM_MAGIC 0x23
@@ -42,7 +42,8 @@ struct queue_hda_s {
 	struct queue_hda_s *queue_next;
 };
 
-struct ctx_s *head;
+
+struct ctx_s *head [4];
 
 enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
 
@@ -56,11 +57,11 @@ enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
 	} while (0);
 
 int _init_ctx (struct ctx_s *pctx, int stack_size, func_t f, void *args);
-int create_ctx(int stack_size, func_t f, void *args);
+int create_ctx(int stack_size, func_t f, void *args, int n_core);
 void sem_init(struct sem_s *sem, unsigned int val);
 void mtx_init(struct mtx_s *mutex);
 
-void _switch_to_ctx(struct ctx_s *ctx, int assigned_core);
+void _switch_to_ctx(struct ctx_s *ctx);
 void _yield();
 void start_sched();
 

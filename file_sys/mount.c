@@ -105,10 +105,9 @@ void boot() {
     IRQVECTOR[TIMER_IRQ] = timer_it;
     IRQVECTOR[0] = init;
 
-    _out(CORE_IRQMAPPER+1, 0x1 << TIMER_IRQ);
-    for(i = 2; i < 8; i++){
-        _out(CORE_IRQMAPPER+i, 0);
-    }
+  
+    for(i = 1; i < 3; i++)
+          _out(CORE_IRQMAPPER+i, 0x1 << TIMER_IRQ);
 
     _out(TIMER_PARAM,128+64+32+8); /* reset + alarm on + 8 tick / alarm */
     _out(TIMER_ALARM,0xFFFFFFFD);   /* alarm at next tick (at 0xFFFFFFFF) */

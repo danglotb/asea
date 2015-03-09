@@ -11,7 +11,7 @@ CFLAGS  += -std=iso9899:1999
 CFLAGS  += -Werror -Wall -lpthread
 #comment / uncommentm
 CFLAGS  += -g
-ROOTDIR=.
+ROOTDIR=/home/enseign/ASE/core
 BINDIR=./bin
 
 LIBDIR  =  $(ROOTDIR)/lib
@@ -60,7 +60,7 @@ cfile.o: cfile.c ifile.h inode.h mount.h
 dfile.o: dfile.c ifile.h inode.h mount.h
 nfile.o: nfile.c ifile.h inode.h mount.h
 pfile.o: pfile.c ifile.h inode.h mount.h
-manage_ctx.o:
+manage_ctx.o: manage_ctx.c manage_ctx.h
 	gcc -I$(INCDIR) -g -m32 -c manage_ctx.c 
 ifile.o: ifile.c inode.h ifile.h 
 mount.o: mount.c config.h manage_ctx.o

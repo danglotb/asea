@@ -71,7 +71,7 @@ static void execute(unsigned int argc, char **argv) {
         cmd->argc = argc--;
         cmd->argv = argv;
         printf("%s\n", argv[1]);
-        create_ctx(STACK_SIZE, proxy_cmd, cmd);
+        create_ctx(STACK_SIZE, proxy_cmd, cmd, 1);
     } else {
         (*c->fun)(argc, argv+1);
     }
@@ -308,7 +308,7 @@ int main(int argc, char **argv) {
     loop_call = (struct proxy_loop*)malloc(sizeof(struct proxy_loop));
     loop_call->fun = loop;
 
-    create_ctx(STACK_SIZE, proxy_loop, loop_call);
+    create_ctx(STACK_SIZE, proxy_loop, loop_call, 0);
     start_sched();
 
     do_exit(0, NULL);
