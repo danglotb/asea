@@ -22,5 +22,6 @@ struct sem_s lock_disk;
 void boot();
 void mount();
 void umount();
+void init_multicore();
 
 #endif

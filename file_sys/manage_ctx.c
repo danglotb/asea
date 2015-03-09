@@ -58,7 +58,7 @@ void mtx_init(struct mtx_s *mutex) {
 /* appel caché a yield, et init les interruptions */
 void start_sched() {
 	irq_enable();
-	_yield();
+//	_yield();
 }
 
 void _switch_to_ctx(struct ctx_s *ctx ){
@@ -105,7 +105,7 @@ void _yield() {
 		_switch_to_ctx(head[n_core]);
 	} else {
 
-		if (current_ctx[n_core]->next_ctx == current_ctx[n_core]) return;
+		if (current_ctx[n_core]->next_ctx == current_ctx[n_core]) {return;}
 
 		while (current_ctx[n_core]->status == TERMINATED) {
 			struct ctx_s *tmp, *pred;
@@ -119,7 +119,7 @@ void _yield() {
 				free(tmp);
 				exit(EXIT_SUCCESS);
 			}
-
+	
 			/* seek of pred */
 			pred = tmp->next_ctx;
 			while (pred->next_ctx != tmp)
@@ -129,7 +129,7 @@ void _yield() {
 			free(tmp->stack);
 			free(tmp);
 		}
-
+	
 		if (current_ctx[n_core]->next_ctx->status == BLOCKED) {
 			struct ctx_s *tmp = current_ctx[n_core]->next_ctx;
 			while (tmp->status == BLOCKED) { 

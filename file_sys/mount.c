@@ -21,6 +21,8 @@
 /* load super bloc of the $CURRENT_VOLUME
    set current_volume accordingly */
 
+extern struct ctx_s *head [4];
+extern struct ctx_s *current_ctx[4];
 extern int current_vol;
 extern int load_super(unsigned int);
 extern void save_super();
@@ -55,39 +57,33 @@ get_hw_config ()
 }
 
 static void
-emptyIT()
+empty_it()
 {
     return;
 }
 
 static void
 timer_it() {
-    _out(TIMER_ALARM,0xFFFFFFFD);
-    _yield();
+   _out(TIMER_ALARM,0xFFFFFFFF-100);
+   _yield();
 }
 
 /*static void hda_irq(){
     hda_end_request();
-}
-*/
-static void compute() {
-    unsigned int i;
-    int core = _in(CORE_ID);
-    printf("Begin compute... %d\n", core);
-    for (i = 0 ; i < 16634000 ; i++)
-        i = i;
-    printf("End compute... \n");
-}
+}*/
 
+static void init_loop(void * args) {
+    while(1) {;}
+}
 
 static void init() {
-    while (1){ compute();}
+    start_sched();
+    _yield();
 }
 
 void boot() {
     char *hw_config;
     int status, i; 
-
 
     /* Hardware initialization */
     hw_config = get_hw_config();
@@ -96,25 +92,64 @@ void boot() {
 
     check_hda();
 
-    _out(CORE_STATUS, 0xF);
-
-    /* Interrupt handlers */
     for(i=0; i<16; i++)
-        IRQVECTOR[i] = emptyIT;
+        IRQVECTOR[i] = empty_it;
 
-    IRQVECTOR[TIMER_IRQ] = timer_it;
     IRQVECTOR[0] = init;
 
-  
-    for(i = 1; i < 3; i++)
-          _out(CORE_IRQMAPPER+i, 0x1 << TIMER_IRQ);
+    IRQVECTOR[TIMER_IRQ] = timer_it;
 
-    _out(TIMER_PARAM,128+64+32+8); /* reset + alarm on + 8 tick / alarm */
-    _out(TIMER_ALARM,0xFFFFFFFD);   /* alarm at next tick (at 0xFFFFFFFF) */
+    _out(CORE_STATUS, 0x7);
 
-    /* Allows all IT */
+    _out(CORE_IRQMAPPER, 1 << HDA_IRQ);
+
+    for(i = 1; i < 3 ; i++) {
+        _out(CORE_IRQMAPPER+i, 1 << TIMER_IRQ);
+    }
+
+    _out(TIMER_PARAM, 128+64+32+8);
+    _out(TIMER_ALARM, 0xFFFFFFFF-100);
+
+    _out(CORE_IRQMAPPER, 1 << HDA_IRQ);
+
     _mask(0);
 
+}
+
+void init_multicore() {
+
+    int i;
+    for (i = 0 ; i < 4 ; i++) {
+        head[i] = NULL;
+        current_ctx[i] = NULL;
+    }
+
+    create_ctx(16634, init_loop, NULL, 1);
+    create_ctx(16634, init_loop, NULL, 2);
+
+    /* init hardware */
+    if(init_hardware("core.ini") == 0) {
+        fprintf(stderr, "Error in hardware initialization\n");
+        exit(EXIT_FAILURE);
+    }
+
+    for(i=0; i<16; i++)
+        IRQVECTOR[i] = empty_it;
+
+    IRQVECTOR[0] = init;
+
+    IRQVECTOR[TIMER_IRQ] = timer_it;
+
+    _out(CORE_STATUS, 0x7);
+
+    for(i = 1; i < 3 ; i++) {
+        _out(CORE_IRQMAPPER+i, 1 << TIMER_IRQ);
+    }
+
+    _out(TIMER_PARAM, 128+64+32+8);
+    _out(TIMER_ALARM, 0xFFFFFFFF-100);
+
+    _mask(0);
 }
 
 /* ------------------------------

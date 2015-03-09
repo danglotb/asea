@@ -12,9 +12,11 @@ static void _goto_sector(unsigned int cylinder, unsigned int sector) {
 	_out(HDA_DATAREGS+3, sector & 0xFF);
 	_out(HDA_CMDREG, CMD_SEEK);
 
+	printf("BEF SLEEP\n");
 	/*	hda_request(); */
 	_sleep(HDA_IRQ);
 
+	printf("AFT SLEEP\n");
 }
 
 void check_hda() {

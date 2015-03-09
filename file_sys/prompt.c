@@ -118,24 +118,6 @@ static void loop(void) {
     }
 }
 
-/*char * relative_to_absolute(char *pathname){
-    unsigned int i;
-    unsigned int length;
-    unsigned int indice;
-    char * path; = current_directory;
-    strcat(path, pathname);
-    char * dir_name;
-    length = strlen(path);
-    for(i = 0; i < length; i++){
-        if(path[i] == '/'){
-            strncpy(dir_name, path+indice; i - indice);
-            indice = i;
-            printf("%s\n", dir_name);
-        }
-    }
-    return NULL;
-}*/
-
 /* commands */
 
 /* change directory */
@@ -290,26 +272,32 @@ static void proxy_cmd(void * proxy) {
 
 /* proxy function (void*) to loop function */
 
-static void proxy_loop(void * proxy) {
+/*static void proxy_loop(void * proxy) {
     struct proxy_loop *proxy_call = (struct proxy_loop*)proxy;
     (proxy_call->fun)();
-}
+}*/
 
 /* main */
 
 int main(int argc, char **argv) {
 
-    boot();
-    mount();
+//   boot();
+//   mount();
+
+    init_multicore();
 
     current_directory = (char*)malloc(sizeof(char)*MAX_PATH);
     strcpy(current_directory, "/");
 
-    loop_call = (struct proxy_loop*)malloc(sizeof(struct proxy_loop));
+/*    loop_call = (struct proxy_loop*)malloc(sizeof(struct proxy_loop));
     loop_call->fun = loop;
 
     create_ctx(STACK_SIZE, proxy_loop, loop_call, 0);
     start_sched();
+    _yield();
+*/
+
+    loop();
 
     do_exit(0, NULL);
 
