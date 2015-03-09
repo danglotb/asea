@@ -7,7 +7,7 @@ CFLAGS	=  -Wall -ansi -pedantic -m32 -lpthread
 CFLAGS  += -Werror -std=iso9899:1999
 CFLAGS  += -g
 
-ROOTDIR=.
+ROOTDIR=/home/enseign/ASE/core
 BINDIR=./bin
 
 LIBDIR  =  $(ROOTDIR)/lib

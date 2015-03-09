@@ -62,9 +62,41 @@ void start_sched() {
 	_yield();
 }
 
+void save_ctx() {
+	static int n_core;
+	n_core = _in(CORE_ID);
+
+	irq_disable();
+
+	/* Sauvegarde de l'état du contexte courrant */
+	asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
+			: "=r" (main_ctx[n_core].esp), "=r" (main_ctx[n_core].ebp)
+	 	);
+	
+	irq_enable();
+}
+
+void _switch_to_main() {
+	static int n_core;
+	n_core = _in(CORE_ID);
+
+	irq_disable();
+
+	current_ctx[n_core] = &main_ctx[n_core];
+
+	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
+		:
+		: "r" (main_ctx[n_core].esp), "r" (main_ctx[n_core].ebp)
+	);
+
+	irq_enable();
+
+}
+
 void _switch_to_ctx(struct ctx_s *ctx ){
 	static int n_core;
 	n_core = _in(CORE_ID);
+
 	assert(ctx->ctx_magic == CTX_MAGIC);
 	irq_disable();
 
@@ -139,7 +171,7 @@ void _yield() {
 			_switch_to_ctx(tmp);
 		}
 		_switch_to_ctx(current_ctx[n_core]->next_ctx);
-	} 
+	}
 }
 
 void sem_down(struct sem_s *sem) {
