@@ -1,6 +1,6 @@
 #include "manage_ctx.h"
 
-struct ctx_s *current_ctx[4];
+struct ctx_s *current_ctx[NUMBER_CORE];
 static struct ctx_s *ctx_wait_hda = NULL;
 
 /* initialisation de contexte */
@@ -15,6 +15,7 @@ int _init_ctx (struct ctx_s *pctx, int stack_size, func_t *f, void *args) {
 	pctx->f = f;
 	pctx->args = args;
 	pctx->next_wait = NULL;
+	
 	irq_enable();
 	return 1;
 }

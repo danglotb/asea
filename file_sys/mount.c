@@ -21,8 +21,9 @@
 /* load super bloc of the $CURRENT_VOLUME
    set current_volume accordingly */
 
-extern struct ctx_s *head [4];
-extern struct ctx_s *current_ctx[4];
+extern struct pool_ctx_s *pool [NUMBER_CORE];
+extern struct ctx_s *head [NUMBER_CORE];
+extern struct ctx_s *current_ctx[NUMBER_CORE];
 extern int current_vol;
 extern int load_super(unsigned int);
 extern void save_super();

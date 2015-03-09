@@ -289,14 +289,6 @@ int main(int argc, char **argv) {
     current_directory = (char*)malloc(sizeof(char)*MAX_PATH);
     strcpy(current_directory, "/");
 
-/*    loop_call = (struct proxy_loop*)malloc(sizeof(struct proxy_loop));
-    loop_call->fun = loop;
-
-    create_ctx(STACK_SIZE, proxy_loop, loop_call, 0);
-    start_sched();
-    _yield();
-*/
-
     loop();
 
     do_exit(0, NULL);

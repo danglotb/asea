@@ -11,6 +11,8 @@
 #define CTX_MAGIC 0x42
 #define SEM_MAGIC 0x23
 
+#define NUMBER_CORE 4;
+
 typedef void (func_t) (void*);
 
 struct ctx_s {
@@ -42,8 +44,14 @@ struct queue_hda_s {
 	struct queue_hda_s *queue_next;
 };
 
+struct pool_ctx_s {
+	struct ctx_s ctx;
+	unsigned int charge;
+};
 
-struct ctx_s *head [4];
+struct pool_ctx_s *pool [NUMBER_CORE];
+
+struct ctx_s *head [NUMBER_CORE];
 
 enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
 
