@@ -1,6 +1,6 @@
 #include "manage_ctx.h"
 
-struct ctx_s *current_ctx[4];
+
 static struct ctx_s *ctx_wait_hda = NULL;
 
 /* initialisation de contexte */
@@ -38,7 +38,23 @@ int create_ctx(int stack_size, func_t *f, void *args, int n_core) {
 		new->assigned_core = n_core;
 		return _init_ctx(new, stack_size, f, args);
 	}
+}
 
+void init_ring_weight() {
+
+}
+
+/* cree un contexte assigné à un core, l'index de ce core est retourné */
+/* on prend par défault NULL pour les argument et 16634 en taille de stack */
+int add_ctx_to_assigned_core(func_t *f, unsigned int weight) {
+	unsigned int i, max = -1;
+	for (i = 0 ; i < NUMBER_CORE ; i++) {
+		if (assigned_weight[i].weight > max || max == -1)
+			max = i;
+	}
+	assigned_weight[i].weight += weight;
+	create_ctx(16634, f, NULL, max);
+	return max;
 }
 
 /* initialisation d'un semaphore  Exercice 12 */
@@ -52,6 +68,21 @@ void sem_init(struct sem_s *sem, unsigned int val) {
 void mtx_init(struct mtx_s *mutex) {
 	sem_init(&(mutex->sem), 1);
 	mutex->owner = NULL;
+}
+
+void _switch_to_init_ctx() {
+	unsigned int n_core = _in(CORE_ID);
+	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
+			:
+			: "r" (init_ctx[n_core].esp), "r" (init_ctx[n_core].ebp)
+	   );
+}
+
+void _save_init_ctx() {
+	unsigned int n_core = _in(CORE_ID);
+	asm( "movl %%esp,%0" "\n\t" "movl %%ebp,%1"
+				: "=r" (init_ctx[n_core].esp), "=r" (init_ctx[n_core].ebp)
+	);
 }
 
 
@@ -105,8 +136,10 @@ void _yield() {
 		_switch_to_ctx(head[n_core]);
 	} else {
 
-		if (current_ctx[n_core]->next_ctx == current_ctx[n_core]) return;
+		/* si il n'y a qu'un seul ctx on ne fait rien */
+		if (current_ctx[n_core]->next_ctx == current_ctx[n_core])return;
 
+		/* traitement des ctx termines */
 		while (current_ctx[n_core]->status == TERMINATED) {
 			struct ctx_s *tmp, *pred;
 			if (current_ctx[n_core] == head[n_core])
@@ -119,7 +152,7 @@ void _yield() {
 				free(tmp);
 				exit(EXIT_SUCCESS);
 			}
-
+	
 			/* seek of pred */
 			pred = tmp->next_ctx;
 			while (pred->next_ctx != tmp)
@@ -130,6 +163,7 @@ void _yield() {
 			free(tmp);
 		}
 
+		/* detection d'interblocage */
 		if (current_ctx[n_core]->next_ctx->status == BLOCKED) {
 			struct ctx_s *tmp = current_ctx[n_core]->next_ctx;
 			while (tmp->status == BLOCKED) { 
@@ -139,6 +173,7 @@ void _yield() {
 			}
 			_switch_to_ctx(tmp);
 		}
+		/* sinon on switch simplement sur le ctx suivant */
 		_switch_to_ctx(current_ctx[n_core]->next_ctx);
 	}
 }

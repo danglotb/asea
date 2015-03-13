@@ -4,7 +4,8 @@
 
 CC	=  gcc
 CFLAGS	=  -Wall -ansi -pedantic -m32 -lpthread
-CFLAGS  += -Werror -std=iso9899:1999
+CFLAGS  += -std=iso9899:1999
+#CFLAGS  += -Werror 
 CFLAGS  += -g
 
 ROOTDIR=/home/enseign/ASE/core

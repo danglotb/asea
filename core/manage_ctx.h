@@ -5,17 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-//#include "hardware_config.h"
+#include "config_hw.h"
 #include "include/hardware.h"
-
-#define CORE_STATUS 0x80
-#define CORE_IRQMAPPER 0x82
-#define CORE_ID 0x126
-
-#define TIMER_CLOCK	0xF0
-#define TIMER_PARAM 0xF4
-#define TIMER_ALARM 0xF8
-#define TIMER_IRQ 2
 
 #define CTX_MAGIC 0x42
 #define SEM_MAGIC 0x23
@@ -46,13 +37,23 @@ struct mtx_s {
 	struct ctx_s *owner;
 };
 
+/* unused */
 struct queue_hda_s {
 	struct ctx_s *queue_head;
 	struct queue_hda_s *queue_next;
 };
 
+/* struct representant la charge de travaille du ring pour un core */
+typedef struct {
+	struct ctx_s *ring_ctx;
+	unsigned int weight;
+} weight_ctx_to_core_s ;
 
-struct ctx_s *head [4];
+weight_ctx_to_core_s assigned_weight[NUMBER_CORE];
+
+struct ctx_s init_ctx[NUMBER_CORE];
+struct ctx_s *current_ctx[NUMBER_CORE];
+struct ctx_s *head [NUMBER_CORE];
 
 enum status {READY,ACTIVATED,TERMINATED,BLOCKED,HDA_WAIT};
 
@@ -70,6 +71,12 @@ int create_ctx(int stack_size, func_t f, void *args, int n_core);
 void sem_init(struct sem_s *sem, unsigned int val);
 void mtx_init(struct mtx_s *mutex);
 
+void init_ring_weight();
+int add_ctx_to_assigned_core(func_t *f, unsigned int weight);
+
+
+void _switch_to_init_ctx();
+void _save_init_ctx();
 void _switch_to_ctx(struct ctx_s *ctx);
 void _yield();
 void start_sched();
