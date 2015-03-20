@@ -40,10 +40,6 @@ int create_ctx(int stack_size, func_t *f, void *args, int n_core) {
 	}
 }
 
-void init_ring_weight() {
-
-}
-
 /* cree un contexte assigné à un core, l'index de ce core est retourné */
 /* on prend par défault NULL pour les argument et 16634 en taille de stack */
 int add_ctx_to_assigned_core(func_t *f, unsigned int weight) {
@@ -97,7 +93,7 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 	n_core = _in(CORE_ID);
 
 	assert(ctx->ctx_magic == CTX_MAGIC);
-	irq_disable();
+
 
 	/* init variable contexte courant (contexte appelant) */
 	if (current_ctx[n_core] != NULL) {
@@ -110,7 +106,7 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 	current_ctx[n_core] = ctx;
 
 
-	/* Changement des registres et donc du contexte courant */
+	/*Changement des registres et donc du contexte courant */
 	asm( "movl %0,%%esp" "\n\t" "movl %1,%%ebp"
 			:
 			: "r" (ctx->esp), "r" (ctx->ebp)
@@ -127,43 +123,41 @@ void _switch_to_ctx(struct ctx_s *ctx ){
 	return;
 }
 
-/* appel caché du switch_to_ctx */
+ 
 void _yield() {
 	static int n_core;
 	n_core = _in(CORE_ID);
+	irq_disable();
 	if (head[n_core] == NULL) return;
 	if (current_ctx[n_core] == NULL) {	
 		_switch_to_ctx(head[n_core]);
 	} else {
 
-		/* si il n'y a qu'un seul ctx on ne fait rien */
-		if (current_ctx[n_core]->next_ctx == current_ctx[n_core])return;
-
 		/* traitement des ctx termines */
-		while (current_ctx[n_core]->status == TERMINATED) {
+		while (current_ctx[n_core]->next_ctx->status == TERMINATED) {
 			struct ctx_s *tmp, *pred;
-			if (current_ctx[n_core] == head[n_core])
-				head[n_core] = current_ctx[n_core]->next_ctx;
-			tmp = current_ctx[n_core];
-			current_ctx[n_core] = current_ctx[n_core]->next_ctx;
+		
+			if (current_ctx[n_core]->next_ctx == head[n_core]) {
+				head[n_core] = current_ctx[n_core];
+			}
 
-			if(tmp->next_ctx == current_ctx[n_core]) {
+			tmp = current_ctx[n_core]->next_ctx;
+
+			if(tmp->next_ctx == current_ctx[n_core]->next_ctx) {
 				free(tmp->stack);
 				free(tmp);
 				exit(EXIT_SUCCESS);
+			} else {	
+				current_ctx[n_core]->next_ctx = current_ctx[n_core]->next_ctx->next_ctx;
+				free(tmp->stack);
+				free(tmp);
 			}
-	
-			/* seek of pred */
-			pred = tmp->next_ctx;
-			while (pred->next_ctx != tmp)
-				pred = pred->next_ctx;
-			pred->next_ctx = tmp->next_ctx;
-
-			free(tmp->stack);
-			free(tmp);
 		}
 
-		/* detection d'interblocage */
+		/*si il n'y a qu'un seul ctx on ne fait rien */
+		if (current_ctx[n_core]->next_ctx == current_ctx[n_core])return;
+
+		/*detection d'interblocage */
 		if (current_ctx[n_core]->next_ctx->status == BLOCKED) {
 			struct ctx_s *tmp = current_ctx[n_core]->next_ctx;
 			while (tmp->status == BLOCKED) { 
@@ -177,6 +171,7 @@ void _yield() {
 		_switch_to_ctx(current_ctx[n_core]->next_ctx);
 	}
 }
+
 
 void sem_down(struct sem_s *sem) {
 	int n_core = _in(CORE_ID);

@@ -15,7 +15,7 @@ typedef void (fun_loop_t) (void);
 
 struct _cmd {
     char *name;
-    void (*fun) (unsigned int argc, char *argv[]);
+    void (*fun) (void*);
     char *comment;
 };
 
@@ -26,87 +26,107 @@ struct proxy_cmd {
 };
 
 
-extern struct ctx_s *head [4];
-extern struct ctx_s *current_ctx[4];
+extern struct ctx_s *head [NUMBER_CORE];
+extern struct ctx_s *current_ctx[NUMBER_CORE];
+extern weight_ctx_to_core_s assigned_weight[NUMBER_CORE];
 
-static void compute(void * args);
-static void compute2(void * args);
-static void help(unsigned int argc, char *argv[]);
-static void none(unsigned int argc, char *argv[]);
+static void compute(void*);
+static void compute2(void*);
+static void ps(void*);
+static void help(void*);
+static void none(void*);
 
 static void proxy_cmd(void *);
 
 static struct _cmd commands [] = {
-    {"compute", compute , "fait un calcul tres compliqué"},
-    {"compute2", compute2 , "fait un calcul tres compliqué"},
-    {"help", help,	"display this help"},
+    {"compute\n", compute, "calcul fini"},
+    {"compute2\n", compute2, "calcul infini"},
+    {"ps\n", ps, "affiche la charge sur chaque core"},
+    {"help\n", help, "display this help"},
     {0, none, "unknown command, try help"}
-} ;
+};
+
+static void help(void* args) {
+    struct _cmd *c = commands;
+    for (; c->name ; c++) 
+      printf ("%s\t-- %s\n", c->name, c->comment);
+}
+
+static void none(void* args) {
+    printf ("unknown command, try help\n") ;
+}
 
 
 static void empty_it(){
     return;
 }
 
-static void help(unsigned int argc, char *argv[]) {
-    struct _cmd *c = commands;
-    for (; c->name; c++) 
-      printf ("%s\t-- %s\n", c->name, c->comment);
-}
-
-static void none(unsigned int argc, char *argv[]) {
-    printf ("unknown command, try help\n") ;
-}
-
-static void compute(void * args) {
+static void ps(void* args) {
     unsigned int i;
+    for(i = 0 ; i < NUMBER_CORE ; i++) {
+        printf("charge pour #%d : %d\n", i, assigned_weight[i].weight);
+    }
+}
+
+static void compute(void* args) {
+    unsigned int i, j = 0;
     unsigned int n_core;
     n_core = _in(CORE_ID);
-  	while(1){
+    while (j<2) {
     	printf("compute core #%d\n", n_core);
-	    for (i = 0 ; i < 1663400000 ; i++)
+	    for (i = 0 ; i < 166340000 ; i++)
 	    	i = i;
+        j++;
 	}
+    printf("end - compute core #%d\n", n_core);
 }
 
-static void compute2(void * args) {
-    unsigned int i;
+static void compute2(void* args) {
+    unsigned int i, j = 0;
     unsigned int n_core;
     n_core = _in(CORE_ID);
-   while(1){
+    while(j<2) {
+   /*while(1){*/
     	printf("compute 2 core #%d\n", n_core);
-	    for (i = 0 ; i < 1663400000 ; i++)
+	    for (i = 0 ; i < 166340000 ; i++)
 	    	i = i;
+        j++;
 	}
+    printf("end - compute 2 core #%d\n", n_core);
 }
 
 static void init_loop(void * args) {
-	while(1) {;}
+	while(1) {}
 }
 
 static void timer_it() {
-/*	unsigned int n_core = _in(CORE_ID);
+	unsigned int n_core = _in(CORE_ID);
 	printf("n_core:%d\n",n_core);
-*/	_out(TIMER_ALARM,0xFFFFFFFF-100);
+    _out(TIMER_ALARM,0xFFFFFFFF-100);
 	_yield();
-
 }
 
 static void init() {
 	int n_core = _in(CORE_ID);
 	printf("%d active\n", n_core);
-	start_sched();
+    start_sched();
+    _yield();
 }
+
 
 static void execute(char * argv) {
     struct _cmd *c = commands;
-    while (c->name && strcmp (argv, c->name))
-        c++;
-    printf("c->name");
-   	
-    /* must create with add_ctx_to_assigned_core */
-   	//create_ctx(STACK_SIZE, proxy_cmd, cmd, 1);
-}
+    while (c->name && strcmp(argv,c->name))
+          c++;
+
+    c->fun(NULL);
+
+    /* add_ctx_to_assigned_core(c->fun, 1); */   
+
+
+    /* add a context to the ring 0 : others core will take it 
+    create_ctx(16634, c->fun(NULL), NULL, 0);*/
+}  
 
 
 static void proxy_cmd(void * proxy) {
@@ -117,10 +137,11 @@ static void proxy_cmd(void * proxy) {
 
 static void loop(void) {
     char cmd[MAX_PATH];
-    int error;
     while (1){
+        memset(cmd, 0, sizeof(char)*MAX_PATH);
         printf("$> ");
-        error = read(STDIN_FILENO, cmd, MAX_PATH);
+        fflush(0);
+        read(STDIN_FILENO, cmd, MAX_PATH);
     	execute(cmd);
     }
 }
@@ -135,7 +156,6 @@ int main() {
 	}
 
 	create_ctx(16634, init_loop, NULL, 1);
-	create_ctx(16634, compute, NULL, 1);
 	create_ctx(16634, init_loop, NULL, 2);
 
     /* init hardware */
@@ -161,8 +181,7 @@ int main() {
 	_out(TIMER_PARAM, 128+64+32+8);
     _out(TIMER_ALARM, 0xFFFFFFFF-100);
 
-    /* implements the loop */
-   	loop();
-	//init();
+    loop();
+
 	return 0;
 }

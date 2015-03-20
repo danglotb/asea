@@ -1,0 +1,23 @@
+TP2 : ASEa 
+
+Benjamin DANGLOt
+Antoine PHILIPPE
+
+1- Prise en main : 
+
+Prise en main de la bibliothèque de simulation de multicore réalisée sans trop de difficultés
+
+2- Gestion des contextes en Mutlicore : main_2.c
+
+Réalisation du lancement de 3 core : core 0 reste dans une boucle infinie, tandis que les cores 1 et 2 switch entre deux fonctions compute et compute 2 a chaque tick du timer (). 
+
+la Terminaison des contextes ne fonctionne pas (seg fault). Et donc, les cores tournents a l'infinie sur les fonctions compute.
+
+3- Partage de structure de Noyau
+
+Le prompt est implemente, mais la repartition de la charge des contexte ne l'ais pas.
+Nous crée une sauvegarde d'un contexte spécial, qui est celui de l'init, pour y retourner lorsqu'un core n'a plus aucun vrai ctx a traiter.
+
+Nous avons implemente la fonction add_ctx_to_assigned_core(func_t *f, unsigned int weight), pour ajouter au core le moins charger la fonction donné.
+
+Mais les problemes du manage_ctx se repercute.

@@ -3,12 +3,15 @@
 # Calling makefiles in File_sys & scheduler
 
 CC	=  gcc
-CFLAGS	=  -Wall -ansi -pedantic -m32 -lpthread
+#CFLAGS	=  -Wall 
+CFLAGS  +=-ansi -pedantic -m32 
+CFLAGS  += -pthread
 CFLAGS  += -std=iso9899:1999
-#CFLAGS  += -Werror 
+CFLAGS  += -Werror 
 CFLAGS  += -g
 
-ROOTDIR=/home/enseign/ASE/core
+ROOTDIR=.
+#ROOTDIR=/home/enseign/ASE/core
 BINDIR=./bin
 
 LIBDIR  =  $(ROOTDIR)/lib
@@ -16,7 +19,7 @@ INCDIR  =  $(ROOTDIR)/include
 CFLAGS  += -I$(INCDIR)
 LIBS    = -lhardware
 
-BINARIES= main
+BINARIES= main main_2
 OBJECTS	= $(addsuffix .o,\
 	   manage_ctx)
 
@@ -28,6 +31,7 @@ all: $(BINARIES) $(OBJECTS)
 
 
 main: main.o $(OBJECTS)
+main_2: main_2.o $(OBJECTS)
 
 % : %.o
 	$(CC) $(CFLAGS) -o $(BINDIR)/$@ $^ -L$(LIBDIR) $(LIBS)

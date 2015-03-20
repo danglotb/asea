@@ -71,9 +71,7 @@ int create_ctx(int stack_size, func_t f, void *args, int n_core);
 void sem_init(struct sem_s *sem, unsigned int val);
 void mtx_init(struct mtx_s *mutex);
 
-void init_ring_weight();
 int add_ctx_to_assigned_core(func_t *f, unsigned int weight);
-
 
 void _switch_to_init_ctx();
 void _save_init_ctx();
