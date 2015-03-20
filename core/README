@@ -3,7 +3,7 @@ TP2 : ASEa
 Benjamin DANGLOt
 Antoine PHILIPPE
 
-1- Prise en main : 
+1- Prise en main : (main)
 
 Prise en main de la bibliothèque de simulation de multicore réalisée sans trop de difficultés
 
@@ -13,7 +13,7 @@ Réalisation du lancement de 3 core : core 0 reste dans une boucle infinie, tand
 
 la Terminaison des contextes ne fonctionne pas (seg fault). Et donc, les cores tournents a l'infinie sur les fonctions compute.
 
-3- Partage de structure de Noyau
+3- Partage de structure de Noyau : main_3.c
 
 Le prompt est implemente, mais la repartition de la charge des contexte ne l'ais pas.
 Nous crée une sauvegarde d'un contexte spécial, qui est celui de l'init, pour y retourner lorsqu'un core n'a plus aucun vrai ctx a traiter.

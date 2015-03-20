@@ -5,7 +5,6 @@
 #include <string.h>
 
 #include "include/hardware.h"
-
 #include "manage_ctx.h"
 
 

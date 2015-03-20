@@ -19,7 +19,7 @@ INCDIR  =  $(ROOTDIR)/include
 CFLAGS  += -I$(INCDIR)
 LIBS    = -lhardware
 
-BINARIES= main main_2
+BINARIES= main main_2 main_3
 OBJECTS	= $(addsuffix .o,\
 	   manage_ctx)
 
@@ -30,8 +30,10 @@ all: $(BINARIES) $(OBJECTS)
 ###------------------------------------------------------------
 
 
-main: main.o $(OBJECTS)
+main: main.o
 main_2: main_2.o $(OBJECTS)
+main_3: main_3.o $(OBJECTS)
+
 
 % : %.o
 	$(CC) $(CFLAGS) -o $(BINDIR)/$@ $^ -L$(LIBDIR) $(LIBS)
